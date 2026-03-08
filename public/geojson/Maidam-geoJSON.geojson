@@ -1,0 +1,13 @@
+{
+"type": "FeatureCollection",
+"name": "Maidam-geoJSON",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "Name": "Bhatgaz Moidam", "FolderPath": "Bhatgaz Moidam.kml", "SymbolID": 0, "AltMode": -1, "Base": 0.0, "TimeSpan": 0, "TimeStamp": -1, "BeginTime": "2024-05-07 08:19:53", "EndTime": null, "Snippet": null, "PopupInfo": null, "HasLabel": -1, "LabelID": 0 }, "geometry": { "type": "Point", "coordinates": [ 94.73787, 27.232979, 0.0 ] } },
+{ "type": "Feature", "properties": { "Name": "Borboruah Maidam/Konwar Dihingia Maidam", "FolderPath": "Borboruah Maidam_Konwar Dihingia Maidam.kml/Borboruah Maidam", "SymbolID": 0, "AltMode": -1, "Base": 0.0, "TimeSpan": 0, "TimeStamp": 0, "BeginTime": null, "EndTime": null, "Snippet": null, "PopupInfo": null, "HasLabel": -1, "LabelID": 0 }, "geometry": { "type": "Point", "coordinates": [ 94.739056075000065, 27.138867357000038, 0.0 ] } },
+{ "type": "Feature", "properties": { "Name": "Hatigarh", "FolderPath": "GPS Essentials Export", "SymbolID": 0, "AltMode": -1, "Base": 0.0, "TimeSpan": 0, "TimeStamp": -1, "BeginTime": "2024-05-07 06:00:56.0", "EndTime": null, "Snippet": null, "PopupInfo": "Rajabari vill", "HasLabel": -1, "LabelID": 0 }, "geometry": { "type": "Point", "coordinates": [ 94.693634, 27.213812, 0.0 ] } },
+{ "type": "Feature", "properties": { "Name": "Heloidari Maidam", "FolderPath": "Heloidari Maidam.kml", "SymbolID": 0, "AltMode": -1, "Base": 0.0, "TimeSpan": 0, "TimeStamp": 0, "BeginTime": null, "EndTime": null, "Snippet": null, "PopupInfo": null, "HasLabel": -1, "LabelID": 0 }, "geometry": { "type": "Point", "coordinates": [ 94.734752453000056, 27.079867587000024, 0.0 ] } },
+{ "type": "Feature", "properties": { "Name": "Petudhuwa Maidam", "FolderPath": "Petudhuwa Maidam.kml", "SymbolID": 0, "AltMode": -1, "Base": 0.0, "TimeSpan": 0, "TimeStamp": 0, "BeginTime": null, "EndTime": null, "Snippet": null, "PopupInfo": null, "HasLabel": -1, "LabelID": 0 }, "geometry": { "type": "Point", "coordinates": [ 94.710375359000068, 27.234394129000066, 0.0 ] } },
+{ "type": "Feature", "properties": { "Name": "Sri Sri Alengi Phulbari Satra", "FolderPath": "Sri Sri Alengi Phulbari Satra.kml", "SymbolID": 0, "AltMode": -1, "Base": 0.0, "TimeSpan": 0, "TimeStamp": 0, "BeginTime": null, "EndTime": null, "Snippet": null, "PopupInfo": null, "HasLabel": -1, "LabelID": 0 }, "geometry": { "type": "Point", "coordinates": [ 94.779236672000081, 27.032298918000038, 0.0 ] } }
+]
+}

@@ -1,0 +1,40 @@
+/* Counter Boxes */
+.counter-box {
+    background: #ffffff;
+    border-radius: 15px;
+    padding: 25px;
+    height: 100%;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+}
+
+.counter-box:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+}
+
+#box1 { background-color: rgb(133, 88, 26); color: white; }
+#box2 { background-color: rgb(163, 19, 26); color: white; }
+#box3 { background-color: rgb(45, 125, 50); color: white; }
+
+.box-content {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.box-content p {
+    margin: 4px 0;
+    font-weight: 500;
+}
+
+/* Map */
+#map {
+    height: 450px;
+    width: 100%;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}

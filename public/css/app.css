@@ -1,0 +1,18 @@
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.header {
+    background: #3d94eb;
+    color: #fff;
+}
+
+.content {
+    background: #f4f6f7;
+}
+
+.footer {
+    background: #3d94eb;
+    color: #fff;
+}

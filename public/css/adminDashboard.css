@@ -1,0 +1,107 @@
+/* Make background same as reference */
+.content {
+    background: #e9ecef !important;
+    padding: 0 !important;
+}
+
+/* Layout */
+.dashboard-container {
+    display: flex;
+    min-height: calc(100vh - 150px);
+}
+
+.dashboard-wrapper {
+    display: flex;
+    min-height: calc(100vh - 90px);
+}
+
+/* Sidebar */
+.sidebar {
+    width: 260px;
+    background: #1f2f3a;
+    color: #fff;
+    padding-top: 30px;
+}
+
+/* Menu title */
+.menu-title {
+    font-size: 16px;
+    padding: 0 25px 20px 25px;
+    color: #b0bec5;
+    font-weight: 600;
+}
+
+/* Sidebar links */
+.sidebar a {
+    display: block;
+    padding: 15px 25px;
+    color: #dfe6e9;
+    text-decoration: none;
+    font-size: 18px;
+    transition: 0.2s;
+}
+
+.sidebar a:hover {
+    background: #2f3e4d;
+    color: #fff;
+}
+
+/* Main content */
+.main-content {
+    flex: 1;
+    padding: 50px;
+}
+
+/* Title */
+.dashboard-title {
+    font-size: 48px;
+    font-weight: 400;
+}
+
+/* Cards */
+.card-box {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 40px 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+.card-box h1 {
+    font-size: 48px;
+    margin-top: 15px;
+    font-weight: 500;
+}
+
+/* Main menu links */
+.menu-link {
+    color: #cfd8dc;
+    text-decoration: none;
+    display: block;
+    padding: 10px 20px;
+    font-size: 15px;
+    transition: 0.2s;
+}
+
+.menu-link:hover {
+    background: #2f3e4d;
+    color: #ffffff;
+}
+
+/* Submenu container */
+.submenu {
+    background: #223645;
+}
+
+/* Submenu links */
+.submenu-link {
+    display: block;
+    padding: 8px 40px;
+    font-size: 14px;
+    color: #b0bec5;
+    text-decoration: none;
+}
+
+.submenu-link:hover {
+    background: #2f3e4d;
+    color: #ffffff;
+}
