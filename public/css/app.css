@@ -16,3 +16,24 @@ body {
     background: #3d94eb;
     color: #fff;
 }
+
+/* NAVBAR TAB STYLE */
+.nav-tab {
+    color: white !important;
+    padding: 8px 16px;
+    border-radius: 6px;
+    margin-left: 6px;
+    transition: all 0.2s ease;
+}
+
+/* ACTIVE TAB */
+.nav-tab.active {
+    background-color: white;
+    color: black !important;
+    font-weight: 600;
+}
+
+/* HOVER EFFECT */
+.nav-tab:hover {
+    background-color: rgba(255,255,255,0.2);
+}

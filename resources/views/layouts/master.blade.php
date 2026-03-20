@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sibsagar Zilla Jankaare</title>
+    <title>Sibsagar District GIS Portal</title>
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -64,7 +64,7 @@
 @if (!isset($hideNavbar))
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
-        <a class="navbar-brand" href="/">Sibsagar Zilla Jankaare</a>
+        <div class="navbar-brand">Sibsagar District GIS Portal</div>
 
         <button class="navbar-toggler" type="button"
                 data-bs-toggle="collapse"
@@ -75,23 +75,32 @@
         <div class="collapse navbar-collapse" id="mainNavbar">
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
-                    <a class="nav-link" href="/">Home</a>
+                    <a class="nav-link navbar-tab {{ request()->is('/') ? 'active' : '' }}" href="/">
+                        Home
+                    </a>
                 </li>
 
                 @if(!session()->has('userid'))
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ route('login') }}">
+                    <a class="nav-link navbar-tab {{ request()->routeIs('login') ? 'active' : '' }}"
+                    href="{{ route('login') }}">
                         User Login
                     </a>
                 </li>
                 @endif
 
                 <li class="nav-item">
-                    <a class="nav-link" href="#">About Us</a>
+                    <a class="nav-link navbar-tab {{ request()->is('about') ? 'active' : '' }}"
+                    href="/about">
+                        About Us
+                    </a>
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link" href="#">Contact Us</a>
+                    <a class="nav-link navbar-tab {{ request()->is('contact') ? 'active' : '' }}"
+                    href="/contact">
+                        Contact Us
+                    </a>
                 </li>
             </ul>
         </div>

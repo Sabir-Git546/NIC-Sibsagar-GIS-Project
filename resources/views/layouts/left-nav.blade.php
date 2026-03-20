@@ -28,8 +28,8 @@
             GIS App
         </a>
         <div class="collapse submenu" id="gisMenu">
-            <a href="{{ route('gis.googleMap') }}" class="submenu-link">View Map</a>
-            <a href="{{ route('gis.gisApp') }}" class="submenu-link">Layer Control</a>
+            <a href="{{ route('gis.gisApp') }}" class="submenu-link">View Map</a>
+            <!--<a href="{{ route('gis.gisApp') }}" class="submenu-link">Layer Control</a>-->
         </div>
 
         <!-- Reports -->

@@ -5,18 +5,40 @@ let csvInfoWindow;
 // GIS Layers
 let activeLayers = {};
 
-// MAKE initMap GLOBAL
+// ===============================
+// INITIALIZE MAP
+// ===============================
+
 window.initMap = function () {
 
     const center = { lat: 26.9891, lng: 94.6394 };
 
     map = new google.maps.Map(document.getElementById("map"), {
-        zoom: 14,
+        zoom: 12,
         center: center,
         mapTypeId: "roadmap"
     });
 
     csvInfoWindow = new google.maps.InfoWindow();
+
+    //
+    map.data.addListener('click', function(event) {
+
+        let content = "<div style='max-height:200px;overflow:auto;'>";
+
+        event.feature.forEachProperty(function(value, key) {
+
+            content += "<b>" + key + ":</b> " + value + "<br>";
+
+        });
+
+        content += "</div>";
+
+        csvInfoWindow.setPosition(event.latLng);
+        csvInfoWindow.setContent(content);
+        csvInfoWindow.open(map);
+
+    });
 
     // Layer checkbox listener
     document.querySelectorAll(".layer-checkbox").forEach(cb => {
@@ -36,6 +58,38 @@ window.initMap = function () {
     });
 
 };
+
+
+// ===============================
+// UPDATE MAP BOUNDS (CSV + LAYERS)
+// ===============================
+
+function updateMapBounds(){
+
+    let bounds = new google.maps.LatLngBounds();
+
+    // Include CSV markers
+    csvMarkers.forEach(marker => {
+        bounds.extend(marker.getPosition());
+    });
+
+    // Include GIS layers
+    map.data.forEach(function(feature){
+        processPoints(feature.getGeometry(), bounds.extend, bounds);
+    });
+
+    if(!bounds.isEmpty()){
+        map.fitBounds(bounds);
+
+        // Prevent too much zoom
+        google.maps.event.addListenerOnce(map, 'bounds_changed', function () {
+            if (map.getZoom() > 16) {
+                map.setZoom(16);
+            }
+        });
+    }
+}
+
 
 // ===============================
 // CSV FILE VIEWER
@@ -60,7 +114,6 @@ function loadCSV() {
 
             clearCSV();
 
-            let bounds = new google.maps.LatLngBounds();
             let validPoints = 0;
 
             results.data.forEach(row => {
@@ -81,7 +134,6 @@ function loadCSV() {
                         map: map
                     });
 
-                    bounds.extend(position);
                     validPoints++;
 
                     let content = "<div style='max-height:200px;overflow:auto;'>";
@@ -104,11 +156,13 @@ function loadCSV() {
 
             if (validPoints > 0) {
 
-                map.fitBounds(bounds);
+                updateMapBounds();
 
                 if (validPoints === 1) {
                     map.setZoom(15);
                 }
+
+                alert("CSV Loaded Successfully!");
 
             } else {
 
@@ -116,11 +170,10 @@ function loadCSV() {
 
             }
 
-            alert("CSV Loaded Successfully!");
-
         }
     });
 }
+
 
 function clearCSV() {
 
@@ -131,7 +184,9 @@ function clearCSV() {
         csvInfoWindow.close();
     }
 
+    updateMapBounds();
 }
+
 
 // ===============================
 // LOAD GIS LAYER FROM DATABASE
@@ -149,13 +204,18 @@ function loadLayer(layername) {
 
         activeLayers[layername] = features;
 
-        zoomToLayer();
+        updateMapBounds();
 
     })
 
     .catch(err => console.error("Layer load error:", err));
 
 }
+
+
+// ===============================
+// REMOVE GIS LAYER
+// ===============================
 
 function removeLayer(layername) {
 
@@ -167,27 +227,14 @@ function removeLayer(layername) {
 
     });
 
-}
-
-// ===============================
-// ZOOM TO LAYER
-// ===============================
-
-function zoomToLayer(){
-
-    let bounds = new google.maps.LatLngBounds();
-
-    map.data.forEach(function(feature){
-
-        processPoints(feature.getGeometry(), bounds.extend, bounds);
-
-    });
-
-    if(!bounds.isEmpty()){
-        map.fitBounds(bounds);
-    }
+    updateMapBounds();
 
 }
+
+
+// ===============================
+// PROCESS GEOMETRY POINTS
+// ===============================
 
 function processPoints(geometry, callback, thisArg) {
 
@@ -212,6 +259,7 @@ function processPoints(geometry, callback, thisArg) {
     }
 
 }
+
 
 // ===============================
 // SIDEBAR CONTROL PANEL
@@ -260,6 +308,7 @@ function openPanel() {
     }, 310);
 
 }
+
 
 // ===============================
 // SHAPEFILE → GEOJSON CONVERTER
@@ -327,6 +376,7 @@ async function convertAndSave() {
     }
 
 }
+
 
 // ===============================
 // LAYER SEARCH + DEPARTMENT FILTER

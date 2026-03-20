@@ -38,3 +38,8 @@
     border-radius: 15px;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
+.hero-section{
+    background:#f5f7fa;
+    padding:50px 20px;
+    border-radius:10px;
+}

@@ -110,6 +110,7 @@ Route::delete('/users/{userid}',
     [UserController::class, 'destroy']
 )->name('user.destroy');
 
+
 #All GIS Module Routes
 
 // Show Google Map page

@@ -18,9 +18,10 @@
 
     <!-- Page Title -->
     <div class="mb-4">
-        <h3>Upload GIS Data</h3>
-        <p class="text-muted">
-            Project : <strong>{{ $project->projectname }}</strong>
+        <h3>Upload Project GIS Data</h3>
+        <p class="text-muted fs-4">
+            Project ID : <strong>{{ $project->projectid }}</strong><br>
+            Project Name : <strong>{{ $project->projectname }}</strong>
         </p>
     </div>
 
@@ -50,13 +51,13 @@
                 @csrf
 
                 <!-- Project ID -->
-                <div class="mb-3">
+               <!-- <div class="mb-3">
                     <label class="form-label">Project ID</label>
                     <input type="text"
                            class="form-control"
                            value="{{ $project->projectid }}"
                            readonly>
-                </div>
+                </div> -->
 
                 <!-- Layer Name -->
                 <div class="mb-3">

@@ -1,118 +1,14 @@
+@php
+$hideNavbar = true;
+@endphp
+
 @extends('layouts.master')
 
 @section('styles')
 <link rel="stylesheet" href="{{ asset('css/adminDashboard.css') }}">
+<link rel="stylesheet" href="{{ asset('css/gisApp.css') }}">
 
-<style>
-
-/* WRAPPER */
-.dashboard-wrapper {
-    position: relative;
-    margin-top: 10px;
-}
-
-/* MAIN DASHBOARD LAYOUT */
-.dashboard-container {
-    display: flex;
-    height: 750px;       /* or use 100vh for full viewport */
-    width: 100%;
-    background: #f4f6f9;
-}
-
-/* MAP AREA */
-.main-content {
-    flex: 1 1 auto;       /* grow/shrink automatically with sidebar */
-    min-width: 0;         /* critical for flex shrinking */
-    height: 100%;
-    position: relative;
-}
-
-/* Map container */
-#map {
-    height: 100%;
-    width: 100%;
-}
-
-/* SIDEBAR */
-.side-control-panel {
-    width: 320px;
-    flex-shrink: 0;       /* prevent flexbox from shrinking it below 320px */
-    background: #ffffff;
-    padding: 20px;
-    overflow-y: auto;
-    box-shadow: -2px 0 8px rgba(0,0,0,0.05);
-    transition: width 0.3s ease, padding 0.3s ease;
-}
-
-/* Collapsed State */
-.side-control-panel.collapsed {
-    width: 0;
-    padding: 0;
-}
-
-/* Hide content smoothly */
-.side-control-panel.collapsed .panel-content {
-    display: none;
-}
-
-/* Panel header */
-.panel-title {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-weight: 600;
-    font-size: 18px;
-    margin-bottom: 20px;
-    color: #2c3e50;
-}
-
-/* Close Button (X) */
-.close-btn {
-    background: none;
-    border: none;
-    font-size: 18px;
-    cursor: pointer;
-    color: #2c3e50;
-}
-
-/* Floating Open Button (☰) */
-.open-btn {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    z-index: 1000;
-    background: #2c3e50;
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 18px;
-    cursor: pointer;
-    display: none;
-}
-
-/* Cards */
-.control-card {
-    background: #f8f9fa;
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 15px;
-    border: 1px solid #e3e6ea;
-}
-
-.control-card label {
-    font-weight: 500;
-    font-size: 14px;
-}
-
-.btn-custom {
-    width: 100%;
-    margin-top: 8px;
-}
-
-</style>
 @endsection
-
 
 @section('content')
 
@@ -121,7 +17,6 @@
     window.location = "{{ route('login') }}";
 </script>
 @endif
-
 
 <div class="dashboard-wrapper">
 

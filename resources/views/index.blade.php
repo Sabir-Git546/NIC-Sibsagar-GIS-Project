@@ -19,13 +19,9 @@
 
 @section('content')
 
-<!-- Centered Description -->
-<div class="row justify-content-center mb-5">
-    <div class="col-lg-9 text-center">
-        <p>
-            Sivasagar is a city and headquarter of the Sivasagar district
-        </p>
-    </div>
+<div class="hero-section text-center mb-5">
+    <h3>Integrated platform for monitoring and visualizing district development projects using Geographic Information Systems</h3>
+
 </div>
 
 <!-- Boxes -->

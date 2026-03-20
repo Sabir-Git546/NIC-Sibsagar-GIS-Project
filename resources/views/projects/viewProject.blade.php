@@ -19,7 +19,7 @@
     <!-- MAIN CONTENT -->
     <div class="main-content">
 
-        <h1 class="dashboard-title mb-4">View Projects</h1>
+        <h1 class="dashboard-title mb-4">Depertment Projects View</h1>
 
         <div class="card">
             <div class="card-body">
