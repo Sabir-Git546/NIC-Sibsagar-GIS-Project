@@ -63,5 +63,14 @@
             <a href="{{ route('user.index') }}" class="submenu-link">View User</a>
             <a href="#" class="submenu-link">Assign Roles</a>
         </div>
+
+        <!-- Administrative Management -->
+        <a class="menu-link" data-bs-toggle="collapse" href="#administrativeMenu">
+            District Management
+        </a>
+        <div class="collapse submenu" id="administrativeMenu">
+            <a href="{{ route('dist-bound.create') }}" class="submenu-link">Add Administration</a>
+            <a href="{{ route('dist-bound.index') }}" class="submenu-link">View Administration</a>
+        </div>
         @endif
     </div>

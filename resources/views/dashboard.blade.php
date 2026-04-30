@@ -41,7 +41,7 @@
             <div class="col-md-4">
                 <div class="card-box text-center">
                     <h4>Total Departments</h4>
-                    <h1>12</h1>
+                    <h1>3</h1>
                 </div>
             </div>
 

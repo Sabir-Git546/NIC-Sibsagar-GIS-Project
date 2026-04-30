@@ -7,10 +7,11 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\GisController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectGisController;
+use App\Http\Controllers\DistBoundController;
+//use App\Http\Controllers\DashboardController;
 
 
 #All Index & Login Routes
-
 //index page route
 Route::get('/', function () {
     return view('index');
@@ -197,3 +198,36 @@ Route::post('/projects/{id}/documents/store',
 )->name('projects.documents.store');
 
 
+# District Administration boundary
+// Show allboundary in table
+Route::get('/dist-bound', 
+    [DistBoundController::class, 'index']
+)->name('dist-bound.index');
+
+// Show add boundary form
+Route::get('/dist-bound/create', 
+    [DistBoundController::class, 'create']
+)->name('dist-bound.create');
+
+// Store boundary
+Route::post('/dist-bound', 
+    [DistBoundController::class, 'store']
+)->name('dist-bound.store');
+
+// Show edit boundary form
+Route::get('/dist-bound/{unitid}/edit', 
+    [DistBoundController::class, 'edit']
+)->name('dist-bound.edit');
+
+// Update boundary
+Route::put('/dist-bound/{unitid}', 
+    [DistBoundController::class, 'update']
+)->name('dist-bound.update');
+
+// Delete boundary (recommended)
+Route::delete('/dist-bound/{unitid}', 
+    [DistBoundController::class, 'destroy']
+)->name('dist-bound.destroy');
+
+
+//Route::get('/dashboard', [DashboardController::class, 'dashboard']);
