@@ -87,14 +87,25 @@ class ProjectGisController extends Controller
 
     public function deleteLayer($projectid, $layername)
     {
-        \DB::table('project_gis_data')
+        // Get existing data (for audit + approval)
+        $gisData = DB::table('project_gis_data')
             ->where('projectid', $projectid)
             ->where('layername', $layername)
-            ->delete();
+            ->get();
 
-        return redirect()
-            ->back()
-            ->with('success', 'GIS Layer deleted successfully');
+        // Store request instead of deleting
+        DB::table('approval_requests')->insert([
+            'userid'    => session('userid'),
+            'module'    => 'gis',
+            'action'    => 'delete',
+            'recordid'  => $projectid,
+            'old_data'  => json_encode($gisData),
+            'new_data'  => null,
+            'status'    => 'pending'
+        ]);
+
+        return redirect()->back()
+            ->with('success', 'GIS delete request sent to admin');
     }
 
 }

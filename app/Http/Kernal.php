@@ -1,0 +1,1 @@
+'permission' => \App\Http\Middleware\CheckPermission::class,

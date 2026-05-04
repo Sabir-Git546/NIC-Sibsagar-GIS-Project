@@ -24,6 +24,13 @@
         <div class="card">
             <div class="card-body">
 
+                @if(session('success'))
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        {{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
+
                 <table class="table table-bordered table-striped">
                     <thead class="table-dark">
                         <tr>
@@ -104,6 +111,11 @@
 
     </div>
 </div>
+@if(session('success'))
+<script>
+    alert("{{ session('success') }}");
+</script>
+@endif
 
 @endsection
 

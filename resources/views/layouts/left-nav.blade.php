@@ -72,5 +72,14 @@
             <a href="{{ route('dist-bound.create') }}" class="submenu-link">Add Administration</a>
             <a href="{{ route('dist-bound.index') }}" class="submenu-link">View Administration</a>
         </div>
+        <a class="menu-link" data-bs-toggle="collapse" href="#PermissionMenu">
+            Audit Log & Permissions
+        </a>
+        <div class="collapse submenu" id="PermissionMenu">
+            <a href="{{ route('approvals.index') }}" class="submenu-link">Permissions</a>
+        </div>
+        <div class="collapse submenu" id="PermissionMenu">
+            <a href="{{ route('audit.logs') }}" class="submenu-link">Audit Trail</a>
+        </div>
         @endif
     </div>

@@ -2,29 +2,38 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Models\Project;
 use App\Models\Department;
 use App\Models\AdministrativeUnit;
-use Illuminate\Http\Request;
 
 class ProjectController extends Controller
 {
-    // Show all projects
+    // =========================
+    // LIST PROJECTS
+    // =========================
     public function index()
     {
         $projects = Project::orderBy('projectid', 'asc')->get();
+
         return view('projects.viewProject', compact('projects'));
     }
 
-    // Show add project form
+    // =========================
+    // CREATE FORM
+    // =========================
     public function create()
     {
         $departments = Department::all();
         $units = AdministrativeUnit::all();
+
         return view('projects.addProject', compact('departments', 'units'));
     }
 
-    // Store project
+    // =========================
+    // STORE PROJECT
+    // =========================
     public function store(Request $request)
     {
         $request->validate([
@@ -44,51 +53,95 @@ class ProjectController extends Controller
             'createdby' => session('userid'),
         ]);
 
+        audit_log(
+            'create',
+            'project',
+            $project->projectid,
+            null,
+            $project->toArray()
+        );
+
         return redirect()->route('projects.index')
-                         ->with('success', 'Project created successfully!');
+            ->with('success', 'Project created successfully');
     }
 
-    // Show edit form
+    // =========================
+    // EDIT FORM
+    // =========================
     public function edit($projectid)
     {
         $project = Project::findOrFail($projectid);
         $departments = Department::all();
         $units = AdministrativeUnit::all();
+
         return view('projects.editProject', compact('project', 'departments', 'units'));
     }
 
-    // Update project
+    // =========================
+    // UPDATE REQUEST (NOT DIRECT UPDATE)
+    // =========================
     public function update(Request $request, $projectid)
     {
-        $request->validate([
-            'projectname' => 'required|string|max:200',
-            'description' => 'nullable|string',
-            'status' => 'required|string|max:50',
-            'deptid' => 'required|integer',
-            'location_unitid' => 'required|integer'
-        ]);
-
         $project = Project::findOrFail($projectid);
 
-        $project->update([
+        $newData = [
             'projectname' => $request->projectname,
             'description' => $request->description,
             'status' => $request->status,
             'deptid' => $request->deptid,
             'location_unitid' => $request->location_unitid
+        ];
+
+        DB::table('approval_requests')->insert([
+            'userid' => session('userid'),
+            'module' => 'project',
+            'action' => 'update_request',
+            'recordid' => $projectid,
+            'old_data' => json_encode($project->toArray()),
+            'new_data' => json_encode($newData),
+            'status' => 'pending',
+            'created_at' => now()
         ]);
 
+        audit_log(
+            'update_request',
+            'project',
+            $projectid,
+            $project->toArray(),
+            $newData
+        );
+
         return redirect()->route('projects.index')
-                        ->with('success', 'Project updated successfully!');
+            ->with('success', 'Update request sent for approval');
     }
 
-    // Delete project
+    // =========================
+    // DELETE REQUEST
+    // =========================
     public function destroy($projectid)
     {
         $project = Project::findOrFail($projectid);
-        $project->delete();
+
+        DB::table('approval_requests')->insert([
+            'userid' => session('userid'),
+            'module' => 'project',
+            'action' => 'delete_request',
+            'recordid' => $projectid,
+            'old_data' => json_encode($project->toArray()),
+            'new_data' => null,
+            'status' => 'pending',
+            'created_at' => now()
+        ]);
+
+        audit_log(
+            'delete_request',
+            'project',
+            $projectid,
+            $project->toArray(),
+            null
+        );
 
         return redirect()->route('projects.index')
-                         ->with('success', 'Project deleted successfully!');
+            ->with('success', 'Delete request sent for approval');
     }
 }
