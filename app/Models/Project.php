@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\UserModel;
 
 class Project extends Model
 {
@@ -32,6 +33,13 @@ class Project extends Model
     {
         return $this->belongsTo(AdministrativeUnit::class, 'location_unitid', 'unitid');
     }
-
+    public function creator()
+    {
+        return $this->belongsTo(UserModel::class, 'createdby', 'userid');
+    }
+    public function isOwnedBy($userid)
+    {
+        return $this->createdby === $userid;
+    }
     
 }

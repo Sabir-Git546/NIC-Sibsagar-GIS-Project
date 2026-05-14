@@ -10,95 +10,83 @@
 
 @section('content')
 
+@auth
+
 <div class="dashboard-container">
 
 @include('layouts.left-nav')
 
 <div class="main-content">
 
-    <!-- Page Title -->
-    <div class="mb-4">
-        <h3>Upload Project GIS Data</h3>
-        <p class="text-muted fs-4">
-            Project ID : <strong>{{ $project->projectid }}</strong><br>
-            Project Name : <strong>{{ $project->projectname }}</strong>
-        </p>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>GIS Data for Project : {{ $project->projectname }}</h3>
+
+        <div>
+            <a href="{{ route('projects.index') }}"
+               class="btn btn-warning">
+                Back
+            </a>
+
+            <a href="{{ route('gis.upload.form', $project->projectid) }}"
+               class="btn btn-success">
+                Upload GIS File
+            </a>
+        </div>
     </div>
 
-    <!-- Upload Form -->
     <div class="card">
-        <div class="card-header bg-success text-white">
-            Upload GIS Layer
-        </div>
-
         <div class="card-body">
 
-            {{-- Validation Errors --}}
-            @if($errors->any())
-                <div class="alert alert-danger">
-                    <ul class="mb-0">
-                        @foreach($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
+            <table class="table table-bordered table-striped">
 
-            <form action="{{ route('gis.upload.store', $project->projectid) }}" 
-                  method="POST" 
-                  enctype="multipart/form-data">
+                <thead class="table-dark">
+                    <tr>
+                        <th>GIS ID</th>
+                        <th>Layer Name</th>
+                        <th>Attributes</th>
+                        <th>Uploaded At</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
 
-                @csrf
+                <tbody>
 
-                <!-- Project ID -->
-               <!-- <div class="mb-3">
-                    <label class="form-label">Project ID</label>
-                    <input type="text"
-                           class="form-control"
-                           value="{{ $project->projectid }}"
-                           readonly>
-                </div> -->
+                @forelse($gisdata as $gis)
 
-                <!-- Layer Name -->
-                <div class="mb-3">
-                    <label class="form-label">Layer Name</label>
-                    <input type="text"
-                           name="layername"
-                           class="form-control"
-                           placeholder="Enter GIS Layer Name"
-                           required>
-                </div>
+                <tr>
+                    <td>{{ $gis->gisdataid }}</td>
+                    <td>{{ $gis->layername }}</td>
+                    <td>{{ json_encode($gis->attributes) }}</td>
+                    <td>{{ $gis->uploadedat }}</td>
 
-                <!-- GIS File Upload -->
-                <div class="mb-3">
-                    <label class="form-label">Upload GIS File</label>
-                    <input type="file"
-                           name="gisfile"
-                           class="form-control"
-                           accept=".geojson,.json,.zip"
-                           required>
+                    <td>
+                        <form action="{{ route('gis.delete.layer', [$project->projectid, $gis->layername]) }}" 
+                              method="POST"
+                              onsubmit="return confirm('Delete this entire GIS layer?')">
 
-                    <small class="text-muted">
-                        Supported formats: GeoJSON, JSON, Zipped Shapefile
-                    </small>
-                </div>
+                            @csrf
+                            @method('DELETE')
 
-                <!-- Buttons -->
-                <div class="d-flex justify-content-between">
+                            <button class="btn btn-danger btn-sm">
+                                Delete
+                            </button>
+                        </form>
+                    </td>
+                </tr>
 
-                    <a href="{{ route('gis.view', $project->projectid) }}"
-                       class="btn btn-secondary">
-                        Back
-                    </a>
+                @empty
 
-                    <button type="submit"
-                            class="btn btn-success">
-                        Upload GIS
-                    </button>
+                <tr>
+                    <td colspan="5" class="text-center">
+                        No GIS Data Available
+                    </td>
+                </tr>
 
-                </div>
+                @endforelse
 
-            </form>
+                </tbody>
+
+            </table>
 
         </div>
     </div>
@@ -106,5 +94,7 @@
 </div>
 
 </div>
+
+@endauth
 
 @endsection

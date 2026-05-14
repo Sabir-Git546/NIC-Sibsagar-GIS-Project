@@ -7,15 +7,13 @@
 
     <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!--css filr of this page-->
+
+    <!-- Page CSS -->
     <link rel="stylesheet" href="{{ asset('css/login.css') }}">
-    <style>
-        
-    </style>
 </head>
+
 <body>
 
-<!-- Optional Top Title -->
 <div class="portal-title">
     <h2>Government of Assam</h2>
     <h5>Sibsagar District Administration Portal</h5>
@@ -25,55 +23,149 @@
 
     <div class="card login-card">
 
+        <!-- HEADER -->
         <div class="card-header text-center login-header py-3">
             <h4 class="mb-0">User Login</h4>
         </div>
 
+        <!-- BODY -->
         <div class="card-body p-4">
 
-            <form method="POST" action="{{ route('login.submit')}}">
-            @csrf
+            {{-- SUCCESS MESSAGE --}}
+            @if(session('success'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
 
-                <!-- Username -->
-                <div class="mb-3">
-                    <label class="form-label">Username</label>
-                    <input type="text" 
-                           name="userid" 
-                           class="form-control"
-                           placeholder="Enter your userid"
-                           required>
+                    {{ session('success') }}
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="alert">
+                    </button>
+
                 </div>
+            @endif
 
-                <!-- Password -->
-                <div class="mb-3">
-                    <label class="form-label">Password</label>
-                    <input type="password" 
-                           name="userpass" 
-                           class="form-control"
-                           placeholder="Enter your password"
-                           required>
+
+            {{-- LOGIN ERROR --}}
+            @if(session('error'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+
+                    {{ session('error') }}
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="alert">
+                    </button>
+
                 </div>
+            @endif
 
-                <!-- Role -->
-                <div class="mb-4">
-                    <label class="form-label">Select Role</label>
 
-                    <select name="roleid" class="form-select" required>
-                        <option value="">Select Role</option>
-                        @foreach($roles as $role)
-                            <option value="{{ $role->roleid }}">
-                                {{ $role->rolename }}
-                            </option>
+            {{-- VALIDATION ERRORS --}}
+            @if($errors->any())
+
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+
+                    <strong>Please fix the following:</strong>
+
+                    <ul class="mb-0 mt-2">
+
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
                         @endforeach
+
+                    </ul>
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="alert">
+                    </button>
+
+                </div>
+
+            @endif
+
+
+            <!-- LOGIN FORM -->
+            <form method="POST" action="{{ route('login.submit') }}">
+
+                @csrf
+
+                <!-- USERID -->
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        User ID
+                    </label>
+
+                    <input type="text"
+                           name="userid"
+                           class="form-control @error('userid') is-invalid @enderror"
+                           value="{{ old('userid') }}"
+                           placeholder="Enter your userid"
+                           autocomplete="username"
+                           required>
+
+                </div>
+
+
+                <!-- PASSWORD -->
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Password
+                    </label>
+
+                    <input type="password"
+                           name="password"
+                           class="form-control @error('password') is-invalid @enderror"
+                           placeholder="Enter your password"
+                           autocomplete="current-password"
+                           required>
+
+                </div>
+
+
+                <!-- ROLE -->
+                <div class="mb-4">
+
+                    <label class="form-label">
+                        Select Role
+                    </label>
+
+                    <select name="roleid"
+                            class="form-select @error('roleid') is-invalid @enderror"
+                            required>
+
+                        <option value="">
+                            Select Role
+                        </option>
+
+                        @foreach($roles as $role)
+
+                            <option value="{{ $role->roleid }}"
+                                {{ old('roleid') == $role->roleid ? 'selected' : '' }}>
+
+                                {{ $role->rolename }}
+
+                            </option>
+
+                        @endforeach
+
                     </select>
 
                 </div>
 
-                <!-- Button -->
+
+                <!-- LOGIN BUTTON -->
                 <div class="d-grid">
+
                     <button type="submit" class="btn btn-custom">
+
                         Login
+
                     </button>
+
                 </div>
 
             </form>
@@ -83,6 +175,9 @@
     </div>
 
 </div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

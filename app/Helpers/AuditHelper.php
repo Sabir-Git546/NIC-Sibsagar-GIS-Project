@@ -11,7 +11,7 @@ if (!function_exists('audit_log')) {
             'userid' => session('userid'),
             'action' => $action,
             'module' => $module,
-            'recordid' => $recordid,
+            'record_id' => $recordid,
             'old_data' => json_encode($oldData),
             'new_data' => json_encode($newData),
             'ip_address' => request()->ip(),

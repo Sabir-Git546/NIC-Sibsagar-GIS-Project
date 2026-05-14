@@ -42,6 +42,16 @@ window.initMap = function () {
 
     csvInfoWindow = new google.maps.InfoWindow();
 
+    // secure gis html popups
+    function escapeHtml(text) {
+    return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
     // Feature click (attribute popup)
     map.data.addListener('click', function(event) {
 
@@ -50,7 +60,7 @@ window.initMap = function () {
 
         event.feature.forEachProperty(function(value, key) {
             hasData = true;
-            content += "<b>" + key + ":</b> " + value + "<br>";
+            content += "<b>" + escapeHtml(key) + ":</b> " + escapeHtnl(value) + "<br>";
         });
 
         if (!hasData) {
@@ -64,23 +74,25 @@ window.initMap = function () {
         csvInfoWindow.open(map);
     });
 
-    // Layer checkbox listener
-    document.querySelectorAll(".layer-checkbox").forEach(cb => {
-
-        cb.addEventListener("change", function () {
-
-            let layer = this.value;
-
-            if (this.checked) {
-                loadLayer(layer);
-            } else {
-                removeLayer(layer);
-            }
-        });
-    });
-
-    // Right click context menu init
     initContextMenu();
+
+    // ======================================================
+    // FIXED LAYER CHECKBOX EVENT (DELEGATION)
+    // ======================================================
+    document.getElementById("gisLayerList").addEventListener("change", function (e) {
+
+        if (!e.target.classList.contains("layer-checkbox")) return;
+
+        const layer = e.target.value;
+
+        if (e.target.checked) {
+            loadLayer(layer);
+        } else {
+            removeLayer(layer);
+        }
+
+        syncSelectAll();
+    });
 
     // Map click for clearing nearby search
     map.addListener("click", function(e) {
@@ -104,7 +116,6 @@ window.initMap = function () {
         }
     });
 };
-
 
 // ======================================================
 // MAP BOUNDS
@@ -131,7 +142,6 @@ function updateMapBounds(){
         });
     }
 }
-
 
 // ======================================================
 // CSV MODULE
@@ -174,7 +184,7 @@ function loadCSV() {
 
                     let content = "<div style='max-height:200px;overflow:auto;'>";
                     for (let key in row) {
-                        content += "<b>" + key + ":</b> " + row[key] + "<br>";
+                        content += "<b>" + escapeHtml(key) + ":</b> " + escapeHtml(row[key]) + "<br>";
                     }
                     content += "</div>";
 
@@ -207,43 +217,123 @@ function clearCSV() {
     updateMapBounds();
 }
 
-
 // ======================================================
 // GIS LAYERS
 // ======================================================
 function loadLayer(layername) {
 
+    if (activeLayers[layername]) return;
+
     fetch("/gis/layer/" + layername)
-    .then(res => res.json())
-    .then(data => {
+        .then(res => res.json())
+        .then(data => {
 
-        let features = map.data.addGeoJson(data);
+            const features = map.data.addGeoJson(data);
 
-        features.forEach(f => {
-            map.data.overrideStyle(f, {});
-            f.setProperty("layername", layername);
-        });
+            features.forEach(f => {
+                f.setProperty("layername", layername);
+            });
 
-        activeLayers[layername] = features;
+            // STORE REAL FEATURES (IMPORTANT FIX)
+            activeLayers[layername] = features;
 
-        updateMapBounds();
-    })
-    .catch(err => console.error("Layer load error:", err));
+            updateMapBounds();
+        })
+        .catch(err => console.error(err));
 }
 
 function removeLayer(layername) {
 
-    map.data.forEach(function(feature){
-        if(feature.getProperty("layername") === layername){
-            map.data.remove(feature);
-        }
-    });
+    const features = activeLayers[layername];
+
+    if (features && Array.isArray(features)) {
+
+        features.forEach(f => {
+            map.data.remove(f);
+        });
+    }
 
     delete activeLayers[layername];
 
     updateMapBounds();
 }
 
+// SELECT / UNSELECT ALL
+function toggleAllLayers(masterCheckbox) {
+
+    const checkboxes = document.querySelectorAll('.layer-checkbox');
+
+    checkboxes.forEach(cb => {
+
+        const layer = cb.value;
+
+        cb.checked = masterCheckbox.checked;
+
+        if (masterCheckbox.checked) {
+
+            if (!activeLayers[layer]) {
+                loadLayer(layer);
+            }
+
+        } else {
+            removeLayer(layer);
+        }
+    });
+
+    syncSelectAll();
+}
+
+// SYNC MASTER CHECKBOX
+function syncSelectAll() {
+
+    const checkboxes = document.querySelectorAll('.layer-checkbox');
+
+    const allChecked =
+        Array.from(checkboxes).every(cb => cb.checked);
+
+    document.getElementById('selectAllLayers').checked = allChecked;
+}
+
+// Remove Layers
+function removeLayer(layername) {
+
+    const toRemove = [];
+
+    map.data.forEach(feature => {
+
+        if (feature.getProperty("layername") === layername) {
+            toRemove.push(feature);
+        }
+    });
+
+    toRemove.forEach(f => map.data.remove(f));
+
+    delete activeLayers[layername];
+
+    updateMapBounds();
+}
+
+//load layer safely
+function loadLayer(layername) {
+
+    if (activeLayers[layername]) return;
+
+    fetch("/gis/layer/" + layername)
+        .then(res => res.json())
+        .then(data => {
+
+            let features = map.data.addGeoJson(data);
+
+            features.forEach(f => {
+                f.setProperty("layername", layername);
+            });
+
+            activeLayers[layername] = true;
+
+            updateMapBounds();
+        })
+        .catch(err => console.error("Layer load error:", err));
+}
 
 // ======================================================
 // GEOMETRY UTILITY
@@ -382,58 +472,32 @@ function filterLayers() {
 // ======================================================
 // MEASUREMENT TOOL (UNCHANGED LOGIC)
 // ======================================================
-function toggleMeasure() {
+function toggleAllLayers(masterCheckbox) {
 
-    const btn = document.getElementById("measureBtn");
+    const checkboxes = document.querySelectorAll('.layer-checkbox');
 
-    measureMode = !measureMode;
+    const shouldLoad = masterCheckbox.checked;
 
-    if (measureMode) {
+    checkboxes.forEach(cb => {
 
-        btn.innerText = "Disable Measure Tool";
-        btn.classList.remove("btn-outline-secondary");
-        btn.classList.add("btn-danger");
+        const layer = cb.value;
 
-        map.setOptions({ draggableCursor: 'crosshair' });
+        // avoid unnecessary re-trigger loops
+        cb.checked = shouldLoad;
 
-        // reset state safely
-        measurePath = [];
-        measureMarkers = [];
-        totalDistance = 0;
+        if (shouldLoad) {
 
-        if (measurePolyline) {
-            measurePolyline.setMap(null);
+            if (!activeLayers[layer]) {
+                loadLayer(layer);
+            }
+
+        } else {
+            removeLayerSafe(layer);
         }
+    });
 
-        measurePolyline = new google.maps.Polyline({
-            map: map,
-            strokeColor: "#FF0000",
-            strokeWeight: 3
-        });
-
-        measureInfoWindow = new google.maps.InfoWindow();
-
-        google.maps.event.clearListeners(map, "click");
-        google.maps.event.clearListeners(map, "dblclick");
-
-        map.addListener("click", addMeasurePoint);
-        map.addListener("dblclick", finishMeasurement);
-
-    } else {
-
-        btn.innerText = "Enable Measure Tool";
-        btn.classList.remove("btn-danger");
-        btn.classList.add("btn-outline-secondary");
-
-        google.maps.event.clearListeners(map, "click");
-        google.maps.event.clearListeners(map, "dblclick");
-
-        map.setOptions({ draggableCursor: null });
-
-        measureMode = false;
-    }
+    syncSelectAll();
 }
-
 function addMeasurePoint(event) {
 
     if (!measureMode || !measurePolyline) return;
@@ -842,59 +906,6 @@ window.createBufferArea = function () {
 // ======================================================
 // APPLY BUFFER (FIXED TURF + GEOMETRY)
 // ======================================================
-// window.applyBuffer = function () {
-
-//     let meters = parseFloat(document.getElementById("bufferDistance").value);
-
-//     if (!meters || meters <= 0) {
-//         alert("Enter valid distance in meters.");
-//         return;
-//     }
-
-//     if (!selectedFeature) {
-//         alert("No feature selected.");
-//         return;
-//     }
-
-//     if (activeBuffer) {
-//         activeBuffer.setMap(null);
-//         activeBuffer = null;
-//     }
-
-//     const geojson = featureToGeoJSON(selectedFeature);
-
-//     if (!geojson) {
-//         alert("Unsupported geometry.");
-//         return;
-//     }
-
-//     // TURF BUFFER (FIXED UNITS)
-//     const buffered = turf.buffer(geojson, meters / 1000, {
-//         units: "kilometers"
-//     });
-
-//     const coords = buffered.geometry.coordinates[0].map(c => ({
-//         lat: c[1],
-//         lng: c[0]
-//     }));
-
-//     activeBuffer = new google.maps.Polygon({
-//         paths: coords,
-//         map: map,
-//         fillColor: "#00FF00",
-//         fillOpacity: 0.25,
-//         strokeColor: "#008000",
-//         strokeWeight: 2
-//     });
-
-//     map.data.overrideStyle(selectedFeature, {
-//         fillColor: "yellow",
-//         strokeColor: "red",
-//         strokeWeight: 3
-//     });
-
-//     closeBufferPanel();
-// };
 window.applyBuffer = function () {
 
     let meters = parseFloat(document.getElementById("bufferDistance").value);

@@ -10,23 +10,31 @@ class AuditLogController extends Controller
     public function index(Request $request)
     {
         $query = DB::table('audit_logs')
-            ->orderBy('created_at', 'desc');
+            ->leftJoin('users', 'users.userid', '=', 'audit_logs.userid')
+            ->select('audit_logs.*', 'users.username')
+            ->orderByDesc('audit_logs.created_at');
 
-        // optional filters
-        if ($request->user) {
-            $query->where('userid', $request->user);
+        if ($request->filled('user')) {
+            $query->where('audit_logs.userid', trim($request->user));
         }
 
-        if ($request->module) {
-            $query->where('module', $request->module);
+        if ($request->filled('module')) {
+            $query->where('audit_logs.module', trim($request->module));
         }
 
-        if ($request->action) {
-            $query->where('action', $request->action);
+        if ($request->filled('action')) {
+            $query->where('audit_logs.action', trim($request->action));
         }
 
-        $logs = $query->limit(100)->get();
+        if ($request->filled('from') && $request->filled('to')) {
+            $query->whereBetween('audit_logs.created_at', [
+                $request->from,
+                $request->to
+            ]);
+        }
 
-        return view('admin.audit_logs', compact('logs'));
+        return view('admin.audit_logs', [
+            'logs' => $query->paginate(50)
+        ]);
     }
 }

@@ -7,26 +7,46 @@ use App\Models\AdministrativeUnit;
 
 class DistBoundController extends Controller
 {
-    /**
-     * ===============================
-     * SHOW ALL BOUNDARIES (TABLE VIEW)
-     * ===============================
-     */
-    public function index()
+    // ===============================
+    // CONSTRUCTOR
+    // ===============================
+    public function __construct()
     {
-        $units = AdministrativeUnit::orderBy('unitid', 'asc')->get();
-        return view('dist-bound.index', compact('units'));
+        // ADMIN ONLY ACCESS
+        $this->middleware('permission:admin');
     }
 
     /**
      * ===============================
-     * SHOW ADD FORM
+     * SHOW ALL BOUNDARIES
+     * ===============================
+     */
+    public function index()
+    {
+        $units = AdministrativeUnit::orderBy(
+            'unitid',
+            'asc'
+        )->get();
+
+        return view(
+            'dist-bound.index',
+            compact('units')
+        );
+    }
+
+    /**
+     * ===============================
+     * SHOW CREATE FORM
      * ===============================
      */
     public function create()
     {
-        $units = AdministrativeUnit::all(); // for parent dropdown
-        return view('dist-bound.create', compact('units'));
+        $units = AdministrativeUnit::all();
+
+        return view(
+            'dist-bound.create',
+            compact('units')
+        );
     }
 
     /**
@@ -37,32 +57,62 @@ class DistBoundController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'unitname' => 'required|string|max:200',
-            'unittype' => 'required|string|max:100',
+
+            'unitname'      => 'required|string|max:200',
+
+            'unittype'      => 'required|string|max:100',
+
             'parent_unitid' => 'nullable|integer',
-            'geometry' => 'required|file|mimes:geojson,json,zip'
+
+            'geometry'      => 'required|file|mimes:geojson,json,zip'
+
         ]);
+
 
         $file = $request->file('geometry');
-        $extension = $file->getClientOriginalExtension();
 
-        // Handle GeoJSON / JSON
+        $extension = strtolower(
+            $file->getClientOriginalExtension()
+        );
+
+
+        // ===============================
+        // HANDLE FILE
+        // ===============================
         if (in_array($extension, ['geojson', 'json'])) {
-            $geometryData = file_get_contents($file);
+
+            $geometryData = file_get_contents(
+                $file->getRealPath()
+            );
+
         } else {
-            // Store ZIP file path (for shapefile)
-            $geometryData = $file->store('uploads/shapefiles');
+
+            // ZIP / SHAPEFILE STORAGE
+            $geometryData = $file->store(
+                'uploads/shapefiles'
+            );
         }
 
+
         AdministrativeUnit::create([
-            'unitname' => $request->unitname,
-            'unittype' => $request->unittype,
+
+            'unitname'      => trim($request->unitname),
+
+            'unittype'      => trim($request->unittype),
+
             'parent_unitid' => $request->parent_unitid,
-            'geometry' => $geometryData
+
+            'geometry'      => $geometryData
+
         ]);
 
-        return redirect()->route('dist-bound.index')
-                         ->with('success', 'Boundary added successfully!');
+
+        return redirect()
+            ->route('dist-bound.index')
+            ->with(
+                'success',
+                'Boundary added successfully!'
+            );
     }
 
     /**
@@ -72,10 +122,20 @@ class DistBoundController extends Controller
      */
     public function edit($unitid)
     {
-        $unit = AdministrativeUnit::findOrFail($unitid);
-        $units = AdministrativeUnit::where('unitid', '!=', $unitid)->get();
+        $unit = AdministrativeUnit::findOrFail(
+            $unitid
+        );
 
-        return view('dist-bound.edit', compact('unit', 'units'));
+        $units = AdministrativeUnit::where(
+            'unitid',
+            '!=',
+            $unitid
+        )->get();
+
+        return view(
+            'dist-bound.edit',
+            compact('unit', 'units')
+        );
     }
 
     /**
@@ -86,36 +146,70 @@ class DistBoundController extends Controller
     public function update(Request $request, $unitid)
     {
         $request->validate([
-            'unitname' => 'required|string|max:200',
-            'unittype' => 'required|string|max:100',
+
+            'unitname'      => 'required|string|max:200',
+
+            'unittype'      => 'required|string|max:100',
+
             'parent_unitid' => 'nullable|integer',
-            'geometry' => 'nullable|file|mimes:geojson,json,zip'
+
+            'geometry'      => 'nullable|file|mimes:geojson,json,zip'
+
         ]);
 
-        $unit = AdministrativeUnit::findOrFail($unitid);
+
+        $unit = AdministrativeUnit::findOrFail(
+            $unitid
+        );
+
 
         $data = [
-            'unitname' => $request->unitname,
-            'unittype' => $request->unittype,
-            'parent_unitid' => $request->parent_unitid,
+
+            'unitname'      => trim($request->unitname),
+
+            'unittype'      => trim($request->unittype),
+
+            'parent_unitid' => $request->parent_unitid
+
         ];
 
-        // If new file uploaded
+
+        // ===============================
+        // HANDLE NEW FILE
+        // ===============================
         if ($request->hasFile('geometry')) {
+
             $file = $request->file('geometry');
-            $extension = $file->getClientOriginalExtension();
+
+            $extension = strtolower(
+                $file->getClientOriginalExtension()
+            );
+
 
             if (in_array($extension, ['geojson', 'json'])) {
-                $data['geometry'] = file_get_contents($file);
+
+                $data['geometry'] = file_get_contents(
+                    $file->getRealPath()
+                );
+
             } else {
-                $data['geometry'] = $file->store('uploads/shapefiles');
+
+                $data['geometry'] = $file->store(
+                    'uploads/shapefiles'
+                );
             }
         }
 
+
         $unit->update($data);
 
-        return redirect()->route('dist-bound.index')
-                         ->with('success', 'Boundary updated successfully!');
+
+        return redirect()
+            ->route('dist-bound.index')
+            ->with(
+                'success',
+                'Boundary updated successfully!'
+            );
     }
 
     /**
@@ -125,10 +219,17 @@ class DistBoundController extends Controller
      */
     public function destroy($unitid)
     {
-        $unit = AdministrativeUnit::findOrFail($unitid);
+        $unit = AdministrativeUnit::findOrFail(
+            $unitid
+        );
+
         $unit->delete();
 
-        return redirect()->route('dist-bound.index')
-                         ->with('success', 'Boundary deleted successfully!');
+        return redirect()
+            ->route('dist-bound.index')
+            ->with(
+                'success',
+                'Boundary deleted successfully!'
+            );
     }
 }

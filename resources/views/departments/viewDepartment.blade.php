@@ -30,9 +30,11 @@
                             <th>ID</th>
                             <th>Department Name</th>
                             <th>Description</th>
+                            <th>Administrative Unit</th>
                             <th width="120">Action</th>
                         </tr>
                     </thead>
+
                     <tbody>
 
                         @forelse($departments as $dept)
@@ -40,20 +42,21 @@
                             <td>{{ $dept->deptid }}</td>
                             <td>{{ $dept->deptname }}</td>
                             <td>{{ $dept->deptdescription }}</td>
+                            <td>{{ $dept->unit->unitname ?? '-' }}</td>
+
                             <td class="text-center">
 
-                                <!-- Edit Button -->
                                 <a href="{{ route('department.edit', $dept->deptid) }}"
-                                   class="btn btn-sm btn-primary">
+                                class="btn btn-sm btn-primary">
                                     edit
                                 </a>
 
-                                <!-- Delete Form -->
                                 <form action="{{ route('department.destroy', $dept->deptid) }}"
-                                      method="POST"
-                                      style="display:inline;">
+                                    method="POST"
+                                    style="display:inline;">
                                     @csrf
                                     @method('DELETE')
+
                                     <button type="submit"
                                             class="btn btn-sm btn-danger"
                                             onclick="return confirm('Are you sure?')">
@@ -65,7 +68,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="4" class="text-center">
+                            <td colspan="5" class="text-center">
                                 No Departments Found
                             </td>
                         </tr>

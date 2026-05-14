@@ -28,7 +28,9 @@
             },
             "files": [
                 "app/Helpers/PermissionHelper.php",
-                "app/Helpers/AuditHelper.php"
+                "app/Helpers/AuditHelper.php",
+                "app/Helpers/SecurityHelper.php",
+                "app/Helpers/AuthHelper.php"
             ]
         },
         "autoload-dev": {

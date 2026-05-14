@@ -10,16 +10,11 @@
 
 @section('content')
 
-@if(!session()->has('userid'))
-    <script>
-        window.location = "{{ route('login') }}";
-    </script>
-@endif
+@auth
 
 <div class="dashboard-container">
 
     <!-- SIDEBAR -->
-    
     @include('layouts.left-nav')
 
     <!-- MAIN CONTENT -->
@@ -28,6 +23,7 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="dashboard-title">Add Department</h1>
         </div>
+
         <div class="card-body">
 
             @if(session('success'))
@@ -39,6 +35,7 @@
 
             <form action="{{ route('department.store') }}" method="POST">
             @csrf
+
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label class="form-label">Department Name</label>
@@ -56,6 +53,19 @@
                     <textarea name="deptdescription" class="form-control" rows="3" placeholder="Enter department description"></textarea>
                 </div>
 
+                <div class="mb-3">
+                    <label class="form-label">Administrative Unit</label>
+
+                    <select name="unitid" class="form-select" required>
+                        <option value="">Select Unit</option>
+
+                        @foreach($units as $unit)
+                            <option value="{{ $unit->unitid }}">
+                                {{ $unit->unitname }} ({{ $unit->unittype }})
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
 
                 <div class="text-end">
                     <button type="reset" class="btn btn-secondary px-4">Reset</button>
@@ -67,5 +77,7 @@
         </div>
     </div>
 </div>
+
+@endauth
 
 @endsection

@@ -12,11 +12,8 @@
 
 <div class="dashboard-container">
 
-    <!-- SIDEBAR -->
-    
     @include('layouts.left-nav')
 
-    <!-- MAIN CONTENT -->
     <div class="main-content">
 
         <h1 class="dashboard-title mb-4">View Users</h1>
@@ -27,54 +24,56 @@
                 <table class="table table-bordered table-striped">
                     <thead class="table-dark">
                         <tr>
+                            <th>ID</th>
                             <th>User ID</th>
                             <th>User Name</th>
-                            <th>User Email</th>
-                            <th>User Address</th>
-                            <th>User Phone No</th>
+                            <th>Email</th>
                             <th>Department</th>
                             <th>Role</th>
                             <th width="120">Action</th>
                         </tr>
                     </thead>
+
                     <tbody>
 
                         @forelse($users as $user)
                         <tr>
+                            <td>{{ $user->id }}</td>
                             <td>{{ $user->userid }}</td>
                             <td>{{ $user->username }}</td>
-                            <td>{{ $user->useremail }}</td>
-                            <td>{{ $user->useraddress }}</td>
-                            <td>{{ $user->userphno }}</td>
+                            <td>{{ $user->email }}</td>
+
                             <td>{{ $user->department->deptname ?? '-' }}</td>
                             <td>{{ $user->role->rolename ?? '-' }}</td>
+
                             <td class="text-center">
 
-                                <!-- Edit Button -->
-                                <a href="{{ route('user.edit', $user->userid) }}"
+                                <a href="{{ route('user.edit', $user->id) }}"
                                    class="btn btn-sm btn-primary">
                                     edit
                                 </a>
 
-                                <!-- Delete Form -->
-                                <form action="{{ route('user.destroy', $user->userid) }}"
+                                <form action="{{ route('user.destroy', $user->id) }}"
                                       method="POST"
                                       style="display:inline;">
                                     @csrf
                                     @method('DELETE')
+
                                     <button type="submit"
                                             class="btn btn-sm btn-danger"
                                             onclick="return confirm('Are you sure?')">
                                         delete
                                     </button>
+
                                 </form>
 
                             </td>
                         </tr>
+
                         @empty
                         <tr>
-                            <td colspan="4" class="text-center">
-                                No Departments Found
+                            <td colspan="9" class="text-center">
+                                No Users Found
                             </td>
                         </tr>
                         @endforelse

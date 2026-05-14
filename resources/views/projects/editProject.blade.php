@@ -10,116 +10,218 @@
 
 @section('content')
 
+@auth
+
 <div class="dashboard-container">
 
-    <!-- SIDEBAR -->
     @include('layouts.left-nav')
 
-    <!-- MAIN CONTENT -->
     <div class="main-content">
 
         <div class="card shadow-sm">
+
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Edit Project</h5>
+
+                <h5 class="mb-0">
+
+                    @if(auth()->user()->roleid == 1)
+                        Edit Project
+                    @else
+                        Request Project Update
+                    @endif
+
+                </h5>
+
             </div>
 
             <div class="card-body">
 
-                {{-- Validation Errors --}}
                 @if($errors->any())
+
                     <div class="alert alert-danger">
+
                         <ul class="mb-0">
+
                             @foreach($errors->all() as $error)
+
                                 <li>{{ $error }}</li>
+
                             @endforeach
+
                         </ul>
+
                     </div>
+
                 @endif
 
-                <form action="{{ route('projects.update', $project->projectid) }}" method="POST">
+                <form action="{{ route('projects.update', $project->projectid) }}"
+                      method="POST"
+                      id="editProjectForm">
+
                     @csrf
                     @method('PUT')
 
-                    {{-- Project ID (Readonly) --}}
                     <div class="mb-3">
-                        <label class="form-label">Project ID</label>
-                        <input type="text" class="form-control" value="{{ $project->projectid }}" readonly>
+
+                        <label class="form-label">
+                            Project ID
+                        </label>
+
+                        <input type="text"
+                               class="form-control"
+                               value="{{ $project->projectid }}"
+                               readonly>
+
                     </div>
 
                     <div class="row mb-3">
 
-                        {{-- Project Name --}}
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Project Name</label>
+
+                            <label class="form-label">
+                                Project Name
+                            </label>
+
                             <input type="text"
-                                name="projectname"
-                                class="form-control"
-                                value="{{ old('projectname', $project->projectname) }}"
-                                required>
+                                   name="projectname"
+                                   class="form-control"
+                                   value="{{ old('projectname', $project->projectname) }}"
+                                   required>
+
                         </div>
 
-                        {{-- Project Status --}}
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Status</label>
-                            <select name="status" class="form-select" required>
-                                <option value="">Select Status</option>
-                                <option value="Planning" {{ old('status', $project->status) == 'Planning' ? 'selected' : '' }}>Planning</option>
-                                <option value="Ongoing" {{ old('status', $project->status) == 'Ongoing' ? 'selected' : '' }}>Ongoing</option>
-                                <option value="Completed" {{ old('status', $project->status) == 'Completed' ? 'selected' : '' }}>Completed</option>
+
+                            <label class="form-label">
+                                Status
+                            </label>
+
+                            <select name="status"
+                                    class="form-select"
+                                    required>
+
+                                <option value="planning"
+                                    {{ old('status', $project->status) == 'planning' ? 'selected' : '' }}>
+                                    Planning
+                                </option>
+
+                                <option value="ongoing"
+                                    {{ old('status', $project->status) == 'ongoing' ? 'selected' : '' }}>
+                                    Ongoing
+                                </option>
+
+                                <option value="completed"
+                                    {{ old('status', $project->status) == 'completed' ? 'selected' : '' }}>
+                                    Completed
+                                </option>
+
                             </select>
+
                         </div>
 
-                        {{-- Department --}}
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Department</label>
-                            <select name="deptid" class="form-select" required>
-                                <option value="">Select Department</option>
+
+                            <label class="form-label">
+                                Department
+                            </label>
+
+                            <select name="deptid"
+                                    class="form-select"
+                                    required>
+
                                 @foreach($departments as $dept)
-                                    <option value="{{ $dept->deptid }}" {{ old('deptid', $project->deptid) == $dept->deptid ? 'selected' : '' }}>
+
+                                    <option value="{{ $dept->deptid }}"
+                                        {{ old('deptid', $project->deptid) == $dept->deptid ? 'selected' : '' }}>
+
                                         {{ $dept->deptname }}
+
                                     </option>
+
                                 @endforeach
+
                             </select>
+
                         </div>
 
-                        {{-- Location --}}
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Location (Village/Block)</label>
-                            <select name="location_unitid" class="form-select" required>
-                                <option value="">Select Location</option>
+
+                            <label class="form-label">
+                                Location
+                            </label>
+
+                            <select name="location_unitid"
+                                    class="form-select"
+                                    required>
+
                                 @foreach($units as $unit)
-                                    <option value="{{ $unit->unitid }}" {{ old('location_unitid', $project->location_unitid) == $unit->unitid ? 'selected' : '' }}>
+
+                                    <option value="{{ $unit->unitid }}"
+                                        {{ old('location_unitid', $project->location_unitid) == $unit->unitid ? 'selected' : '' }}>
+
                                         {{ $unit->unitname }}
+
                                     </option>
+
                                 @endforeach
+
                             </select>
+
                         </div>
 
                     </div>
 
-                    {{-- Project Description --}}
                     <div class="mb-3">
-                        <label class="form-label">Project Description</label>
-                        <textarea name="description" class="form-control" rows="3">{{ old('description', $project->description) }}</textarea>
+
+                        <label class="form-label">
+                            Description
+                        </label>
+
+                        <textarea name="description"
+                                  class="form-control"
+                                  rows="4">{{ old('description', $project->description) }}</textarea>
+
                     </div>
 
                     <div class="d-flex justify-content-between">
-                        <a href="{{ route('projects.index') }}" class="btn btn-secondary">
+
+                        <a href="{{ route('projects.index') }}"
+                           class="btn btn-secondary">
+
                             Back
+
                         </a>
 
-                        <button type="submit" class="btn btn-success">
-                            Update Project
+                        <button type="submit"
+                                class="btn btn-success"
+                                id="submitBtn"
+                                data-role="{{ auth()->user()->roleid == 1 ? 'admin' : 'user' }}"
+                                onclick="return confirmUpdate('{{ auth()->user()->roleid == 1 ? 'admin' : 'user' }}')">
+
+                            @if(auth()->user()->roleid == 1)
+                                Update Project
+                            @else
+                                Send Update Request
+                            @endif
+
                         </button>
+
                     </div>
 
                 </form>
 
             </div>
+
         </div>
 
-    </div>    
+    </div>
 
 </div>
 
+@endauth
+
+@endsection
+
+@section('scripts')
+<script src="{{ asset('js/project-module.js') }}"></script>
 @endsection

@@ -11,11 +11,7 @@ $hideNavbar = true;
 
 @section('content')
 
-@if(!session()->has('userid'))
-<script>
-    window.location = "{{ route('login') }}";
-</script>
-@endif
+@auth
 
 <div class="dashboard-wrapper">
 
@@ -62,7 +58,6 @@ $hideNavbar = true;
                                 <div id="adminLayerList"
                                     style="max-height:200px; overflow-y:auto; border:1px solid #ddd; padding:10px; border-radius:6px; background:#fff;">
 
-                                    <!-- Example (Dynamic from DB later) -->
                                     <div class="form-check layer-item">
                                         <input class="form-check-input" type="checkbox">
                                         <label class="form-check-label">District Boundary</label>
@@ -79,7 +74,6 @@ $hideNavbar = true;
                         </div>
                     </div>
 
-
                     <!-- ================= GIS FILE SELECTOR ================= -->
                     <div class="accordion-item">
                         <h2 class="accordion-header">
@@ -90,12 +84,11 @@ $hideNavbar = true;
                         </h2>
 
                         <div id="gisFileSelector"
-                             class="accordion-collapse collapse"
-                             data-bs-parent="#gisControlsAccordion">
+                            class="accordion-collapse collapse"
+                            data-bs-parent="#gisControlsAccordion">
 
                             <div class="accordion-body">
 
-                                <!-- Department -->
                                 <label class="mb-1">Department</label>
                                 <select id="deptFilter"
                                         class="form-control mb-2"
@@ -110,14 +103,23 @@ $hideNavbar = true;
                                     @endforeach
                                 </select>
 
-                                <!-- Search -->
                                 <input type="text"
                                     id="gisLayerSearch"
                                     class="form-control mb-2"
                                     placeholder="Search layer files..."
                                     onkeyup="filterLayers()">
 
-                                <!-- Layer List -->
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input"
+                                        type="checkbox"
+                                        id="selectAllLayers"
+                                        onclick="toggleAllLayers(this)">
+
+                                    <label class="form-check-label fw-bold">
+                                        Select All Layers
+                                    </label>
+                                </div>
+
                                 <div id="gisLayerList"
                                     style="max-height:200px; overflow-y:auto; border:1px solid #ddd; padding:10px; border-radius:6px; background:#fff;">
 
@@ -126,15 +128,16 @@ $hideNavbar = true;
                                     @foreach($layers as $layer)
 
                                         <div class="form-check layer-item"
-                                             data-dept="{{ $layer->deptid }}">
+                                            data-dept="{{ $layer->deptid }}">
 
                                             <input class="form-check-input layer-checkbox"
-                                                   type="checkbox"
-                                                   value="{{ $layer->layername }}"
-                                                   id="layer_{{ $loop->index }}">
+                                                type="checkbox"
+                                                value="{{ $layer->layername }}"
+                                                id="layer_{{ $loop->index }}"
+                                                onchange="syncSelectAll()">
 
                                             <label class="form-check-label"
-                                                   for="layer_{{ $loop->index }}">
+                                                for="layer_{{ $loop->index }}">
                                                 {{ ucfirst($layer->layername) }}
                                             </label>
 
@@ -151,7 +154,6 @@ $hideNavbar = true;
                             </div>
                         </div>
                     </div>
-
 
                     <!-- ================= CSV VIEWER ================= -->
                     <div class="accordion-item">
@@ -187,7 +189,6 @@ $hideNavbar = true;
                         </div>
                     </div>
 
-
                     <!-- ================= MAP TOOLS ================= -->
                     <div class="accordion-item">
                         <h2 class="accordion-header">
@@ -222,7 +223,6 @@ $hideNavbar = true;
                             </div>
                         </div>
                     </div>
-
 
                     <!-- ================= FILE CONVERTER ================= -->
                     <div class="accordion-item">
@@ -294,7 +294,6 @@ $hideNavbar = true;
             </button>
         </div>
 
-
         <!-- BUFFER INPUT PANEL -->
         <div id="bufferPanel" style="
             position:absolute;
@@ -339,10 +338,6 @@ $hideNavbar = true;
 
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC9mTWnANz3Mm-Km933gvoxOv5Wp57P3NM&libraries=geometry&callback=initMap" async defer></script>
 
+@endauth
+
 @endsection
-
-
-
-
-
-

@@ -4,108 +4,402 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+
 use App\Models\ProjectGisData;
+
+use App\Services\AuditService;
 
 class ProjectGisController extends Controller
 {
-    // View GIS data of a specific project
+    // =========================
+    // VIEW GIS DATA
+    // =========================
     public function view($projectid)
     {
-        // Get project info
+        // PROJECT INFO
         $project = DB::table('projects')
-                    ->where('projectid', $projectid)
-                    ->first();
+            ->where('projectid', $projectid)
+            ->first();
 
-        // Get GIS data for the project
+        // GIS LAYERS
         $gisdata = DB::table('project_gis_data')
-                    ->where('projectid', $projectid)
-                    ->get();   // use get() because multiple GIS layers may exist
+            ->where('projectid', $projectid)
+            ->get();
 
-        return view('projects.gis.view', compact('project','gisdata'));
+        return view(
+            'projects.gis.view',
+            compact('project', 'gisdata')
+        );
     }
 
-    // Show GIS upload form
+    // =========================
+    // GIS UPLOAD FORM
+    // =========================
     public function uploadForm($projectid)
     {
         $project = DB::table('projects')
-                    ->where('projectid', $projectid)
-                    ->first();
+            ->where('projectid', $projectid)
+            ->first();
 
-        return view('projects.gis.upload', compact('project'));
+        return view(
+            'projects.gis.upload',
+            compact('project')
+        );
     }
 
-    // stores geometry and attributes in post-gis
-    public function store(Request $request, $projectid)
-    {
-        // Validate input
+    // =========================
+    // STORE GIS DATA
+    // =========================
+    public function store(
+        Request $request,
+        $projectid
+    ) {
+
+        // VALIDATION
         $request->validate([
-            'layername' => 'required|string|max:200',
-            'gisfile'   => 'required|file|mimes:json,geojson'
+
+            'layername' =>
+                'required|string|max:200',
+
+            'gisfile' =>
+                'required|file|mimes:json,geojson'
+
         ]);
 
-        // Read uploaded file
+        // READ FILE
         $file = $request->file('gisfile');
-        $geojsonContent = file_get_contents($file->getRealPath());
 
-        // Convert JSON to PHP array
-        $geojson = json_decode($geojsonContent, true);
+        $geojsonContent = file_get_contents(
+            $file->getRealPath()
+        );
 
-        // Check valid GeoJSON
-        if (!isset($geojson['features'])) {
-            return back()->with('error', 'Invalid GeoJSON file.');
+        // CONVERT JSON
+        $geojson = json_decode(
+            $geojsonContent,
+            true
+        );
+
+        // INVALID GEOJSON
+        if (
+            !$geojson ||
+            !isset($geojson['features'])
+        ) {
+            return back()->with(
+                'error',
+                'Invalid GeoJSON file.'
+            );
         }
 
-        // Loop through each feature
-        foreach ($geojson['features'] as $feature) {
+        // =========================
+        // ADMIN DIRECT INSERT
+        // =========================
+        if (auth()->user()->roleid == 1) {
 
-            // Extract geometry
-            $geometry = json_encode($feature['geometry']);
+            // INSERT FEATURES
+            foreach ($geojson['features'] as $feature) {
 
-            // Extract attributes (properties)
-            $attributes = isset($feature['properties']) 
-                            ? json_encode($feature['properties']) 
-                            : json_encode([]);
+                // GEOMETRY
+                $geometry = json_encode(
+                    $feature['geometry']
+                );
 
-            // Insert into PostGIS table
-            \DB::insert("
-                INSERT INTO project_gis_data 
-                (projectid, layername, geometry, attributes)
-                VALUES 
-                (?, ?, ST_SetSRID(ST_GeomFromGeoJSON(?), 4326), ?)
-            ", [
-                $projectid,
+                // ATTRIBUTES
+                $attributes = isset($feature['properties'])
+                    ? $feature['properties']
+                    : [];
+
+                // INSERT INTO POSTGIS
+                DB::insert(
+
+                    "
+                    INSERT INTO project_gis_data
+                    (
+                        projectid,
+                        layername,
+                        geometry,
+                        attributes
+                    )
+
+                    VALUES
+                    (
+                        ?,
+                        ?,
+                        ST_SetSRID(
+                            ST_GeomFromGeoJSON(?),
+                            4326
+                        ),
+                        ?
+                    )
+                    ",
+
+                    [
+                        $projectid,
+
+                        sanitize_input(
+                            $request->layername
+                        ),
+
+                        $geometry,
+
+                        json_encode($attributes)
+                    ]
+                );
+            }
+
+            // AUDIT LOG
+            AuditService::log(
+
+                'CREATE',
+
+                'GIS',
+
+                'GIS layer uploaded directly by admin: ' .
                 $request->layername,
-                $geometry,
-                $attributes
-            ]);
+
+                null,
+
+                [
+                    'projectid' => $projectid,
+                    'layername' => $request->layername
+                ]
+
+            );
+
+            return redirect()
+                ->route('gis.view', $projectid)
+                ->with(
+                    'success',
+                    'GIS data uploaded successfully!'
+                );
         }
+
+        // =========================
+        // USER APPROVAL FLOW
+        // =========================
+
+        // CHECK DUPLICATE PENDING REQUEST
+        $pending = DB::table('approval_requests')
+
+            ->where('module', 'GIS')
+
+            ->where('recordid', $projectid)
+
+            ->where('layername', $request->layername)
+
+            ->where('status', 'pending')
+
+            ->exists();
+
+        if ($pending) {
+
+            return back()->with(
+                'error',
+                'A pending GIS request already exists.'
+            );
+        }
+
+        // STORE REQUEST ONLY
+        DB::table('approval_requests')->insert([
+
+            'userid' =>
+                auth()->user()->userid,
+
+            'module' =>
+                'GIS',
+
+            'action' =>
+                'upload_request',
+
+            'recordid' =>
+                $projectid,
+
+            'old_data' =>
+                null,
+
+            'new_data' =>
+                json_encode([
+                    'projectid' => $projectid,
+                    'layername' => $request->layername,
+                    'geojson' => $geojson
+                ]),
+
+            'status' =>
+                'pending',
+
+            'layername' =>
+                $request->layername,
+
+            'created_at' =>
+                now()
+
+        ]);
+
+        // AUDIT LOG
+        AuditService::log(
+
+            'CREATE_REQUEST',
+
+            'GIS',
+
+            'GIS upload requested: ' .
+            $request->layername,
+
+            null,
+
+            [
+                'projectid' => $projectid,
+                'layername' => $request->layername
+            ]
+
+        );
 
         return redirect()
+
             ->route('gis.view', $projectid)
-            ->with('success', 'GIS data uploaded successfully!');
+
+            ->with(
+                'success',
+                'GIS upload request sent for approval'
+            );
     }
 
-    public function deleteLayer($projectid, $layername)
-    {
-        // Get existing data (for audit + approval)
+    // =========================
+    // DELETE GIS LAYER
+    // =========================
+    public function deleteLayer(
+        $projectid,
+        $layername
+    ) {
+
+        // EXISTING GIS DATA
         $gisData = DB::table('project_gis_data')
+
             ->where('projectid', $projectid)
+
             ->where('layername', $layername)
+
             ->get();
 
-        // Store request instead of deleting
+        // =========================
+        // ADMIN DIRECT DELETE
+        // =========================
+        if (auth()->user()->roleid == 1) {
+
+            DB::table('project_gis_data')
+
+                ->where('projectid', $projectid)
+
+                ->where('layername', $layername)
+
+                ->delete();
+
+            // AUDIT LOG
+            AuditService::log(
+
+                'DELETE',
+
+                'GIS',
+
+                'GIS deleted directly by admin: ' .
+                $layername,
+
+                $gisData->toArray(),
+
+                null
+
+            );
+
+            return redirect()
+
+                ->back()
+
+                ->with(
+                    'success',
+                    'GIS layer deleted successfully'
+                );
+        }
+
+        // =========================
+        // USER APPROVAL FLOW
+        // =========================
+
+        // CHECK DUPLICATE PENDING REQUEST
+        $pending = DB::table('approval_requests')
+
+            ->where('module', 'GIS')
+
+            ->where('recordid', $projectid)
+
+            ->where('layername', $layername)
+
+            ->where('status', 'pending')
+
+            ->exists();
+
+        if ($pending) {
+
+            return back()->with(
+                'error',
+                'A pending GIS delete request already exists.'
+            );
+        }
+
+        // STORE APPROVAL REQUEST
         DB::table('approval_requests')->insert([
-            'userid'    => session('userid'),
-            'module'    => 'gis',
-            'action'    => 'delete',
-            'recordid'  => $projectid,
-            'old_data'  => json_encode($gisData),
-            'new_data'  => null,
-            'status'    => 'pending'
+
+            'userid' =>
+                auth()->user()->userid,
+
+            'module' =>
+                'GIS',
+
+            'action' =>
+                'delete_request',
+
+            'recordid' =>
+                $projectid,
+
+            'old_data' =>
+                json_encode($gisData->toArray()),
+
+            'new_data' =>
+                null,
+
+            'status' =>
+                'pending',
+
+            'layername' =>
+                $layername,
+
+            'created_at' =>
+                now()
+
         ]);
 
-        return redirect()->back()
-            ->with('success', 'GIS delete request sent to admin');
-    }
+        // AUDIT LOG
+        AuditService::log(
 
+            'DELETE_REQUEST',
+
+            'GIS',
+
+            'GIS delete requested: ' .
+            $layername,
+
+            $gisData->toArray(),
+
+            null
+
+        );
+
+        return redirect()
+
+            ->back()
+
+            ->with(
+                'success',
+                'GIS delete request sent to admin'
+            );
+    }
 }
