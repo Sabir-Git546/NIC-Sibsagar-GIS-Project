@@ -7,6 +7,7 @@ $hideNavbar = true;
 @section('styles')
 <link rel="stylesheet" href="{{ asset('css/adminDashboard.css') }}">
 <link rel="stylesheet" href="{{ asset('css/gisApp.css') }}">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 @endsection
 
 @section('content')
@@ -15,87 +16,34 @@ $hideNavbar = true;
 
 <div class="dashboard-wrapper">
 
-    <!-- Floating Open Button -->
-    <button class="open-btn" id="openPanelBtn" onclick="openPanel()">☰</button>
+    <button class="open-btn" id="openPanelBtn" onclick="GISUI.openPanel()">☰</button>
 
     <div class="dashboard-container">
 
-        <!-- SIDEBAR -->
+        <!-- ================= SIDEBAR ================= -->
         <div class="side-control-panel" id="controlPanel">
 
             <div class="panel-content">
 
                 <div class="panel-title">
                     <span>GIS Control Panel</span>
-                    <button class="close-btn" onclick="closePanel()">✖</button>
+                    <button class="close-btn" onclick="GISUI.closePanel()">✖</button>
                 </div>
 
-                <div class="accordion" id="gisControlsAccordion">
+                <div class="accordion">
 
-                    <!-- ================= ADMIN LAYERS ================= -->
+                    <!-- ================= LAYERS ================= -->
                     <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button" type="button"
-                                data-bs-toggle="collapse" data-bs-target="#adminLayerSelector">
-                                Layer Selector
-                            </button>
-                        </h2>
+                        <button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#layers">
+                            GIS Layers
+                        </button>
 
-                        <div id="adminLayerSelector"
-                             class="accordion-collapse collapse show"
-                             data-bs-parent="#gisControlsAccordion">
+                        <div id="layers" class="accordion-collapse collapse show">
 
                             <div class="accordion-body">
 
-                                <label class="mb-1">Administrative Layers</label>
-
-                                <input type="text"
-                                    id="adminLayerSearch"
-                                    class="form-control mb-2"
-                                    placeholder="Search layer files..."
-                                    onkeyup="filterAdminLayers()">
-
-                                <div id="adminLayerList"
-                                    style="max-height:200px; overflow-y:auto; border:1px solid #ddd; padding:10px; border-radius:6px; background:#fff;">
-
-                                    <div class="form-check layer-item">
-                                        <input class="form-check-input" type="checkbox">
-                                        <label class="form-check-label">District Boundary</label>
-                                    </div>
-
-                                    <div class="form-check layer-item">
-                                        <input class="form-check-input" type="checkbox">
-                                        <label class="form-check-label">Block Boundary</label>
-                                    </div>
-
-                                </div>
-
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ================= GIS FILE SELECTOR ================= -->
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button"
-                                data-bs-toggle="collapse" data-bs-target="#gisFileSelector">
-                                GIS File Selector
-                            </button>
-                        </h2>
-
-                        <div id="gisFileSelector"
-                            class="accordion-collapse collapse"
-                            data-bs-parent="#gisControlsAccordion">
-
-                            <div class="accordion-body">
-
-                                <label class="mb-1">Department</label>
-                                <select id="deptFilter"
-                                        class="form-control mb-2"
-                                        onchange="filterLayers()">
-
+                                <select id="deptFilter" class="form-control mb-2" onchange="GISLayer.filter()">
                                     <option value="">All Departments</option>
-
                                     @foreach($departments as $dept)
                                         <option value="{{ $dept->deptid }}">
                                             {{ $dept->deptname }}
@@ -104,50 +52,85 @@ $hideNavbar = true;
                                 </select>
 
                                 <input type="text"
-                                    id="gisLayerSearch"
-                                    class="form-control mb-2"
-                                    placeholder="Search layer files..."
-                                    onkeyup="filterLayers()">
+                                       class="form-control mb-2"
+                                       placeholder="Search layers..."
+                                       onkeyup="GISLayer.search(this.value)">
 
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input"
-                                        type="checkbox"
-                                        id="selectAllLayers"
-                                        onclick="toggleAllLayers(this)">
-
-                                    <label class="form-check-label fw-bold">
-                                        Select All Layers
-                                    </label>
+                                <div>
+                                    <input type="checkbox" id="selectAllLayers" onclick="GISLayer.toggleAll(this)">
+                                    <label>Select All</label>
                                 </div>
 
-                                <div id="gisLayerList"
-                                    style="max-height:200px; overflow-y:auto; border:1px solid #ddd; padding:10px; border-radius:6px; background:#fff;">
-
-                                @if(isset($layers) && $layers->count() > 0)
+                                <div id="layerList">
 
                                     @foreach($layers as $layer)
-
-                                        <div class="form-check layer-item"
-                                            data-dept="{{ $layer->deptid }}">
-
-                                            <input class="form-check-input layer-checkbox"
-                                                type="checkbox"
-                                                value="{{ $layer->layername }}"
-                                                id="layer_{{ $loop->index }}"
-                                                onchange="syncSelectAll()">
-
-                                            <label class="form-check-label"
-                                                for="layer_{{ $loop->index }}">
-                                                {{ ucfirst($layer->layername) }}
-                                            </label>
-
+                                        <div class="layer-item" data-dept="{{ $layer->deptid }}">
+                                            <input type="checkbox"
+                                                   value="{{ $layer->layername }}"
+                                                   onchange="GISLayer.toggle(this)">
+                                            <label>{{ ucfirst($layer->layername) }}</label>
                                         </div>
-
                                     @endforeach
 
-                                @else
-                                    <p class="text-muted">No GIS Layers Uploaded</p>
-                                @endif
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ================= TOOLS ================= -->
+                    <div class="accordion-item">
+                        <button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#tools">
+                            GIS Tools
+                        </button>
+
+                        <div id="tools" class="accordion-collapse collapse">
+
+                            <div class="accordion-body">
+
+                                <!-- ================= SPATIAL ANALYSIS ================= -->
+
+                                <div class="control-card spatial-analysis-card">
+
+                                    <label class="mb-2 d-block">
+                                        Spatial Analysis
+                                    </label>
+
+                                    <select id="analysisType" class="form-control analysis-select mb-3">
+
+                                        <option value="">Select Analysis</option>
+
+                                        <option value="distance">
+                                            Distance Analysis
+                                        </option>
+
+                                        <option value="buffer">
+                                            Buffer Analysis
+                                        </option>
+
+                                        <option value="overlap">
+                                            Overlap Analysis
+                                        </option>
+
+                                        <option value="area">
+                                            Area Measurement
+                                        </option>
+
+                                        <option value="perimeter">
+                                            Perimeter Measurement
+                                        </option>
+
+                                    </select>
+
+                                    <button class="btn btn-primary w-100 mb-2"
+                                            onclick="GISAnalysis.startSelectedAnalysis()">
+                                        Run Analysis
+                                    </button>
+
+                                    <button class="btn btn-danger w-100"
+                                            onclick="GISAnalysis.clearAnalysis()">
+                                        Clear Analysis
+                                    </button>
 
                                 </div>
 
@@ -157,67 +140,24 @@ $hideNavbar = true;
 
                     <!-- ================= CSV VIEWER ================= -->
                     <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed"
-                                    type="button"
-                                    data-bs-toggle="collapse"
-                                    data-bs-target="#csvViewer">
-                                CSV File Viewer
-                            </button>
-                        </h2>
+                        <button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#csv">
+                            CSV Viewer
+                        </button>
 
-                        <div id="csvViewer"
-                             class="accordion-collapse collapse"
-                             data-bs-parent="#gisControlsAccordion">
+                        <div id="csv" class="accordion-collapse collapse">
 
                             <div class="accordion-body">
 
-                                <input type="file" id="csvFile"
-                                       class="form-control mb-2" accept=".csv">
+                                <input type="file" id="csvFile" class="form-control mb-2">
 
-                                <button class="btn btn-success btn-custom w-100 mb-2"
-                                        onclick="loadCSV()">
-                                    Upload & View
+                                <button class="btn btn-success w-100 mb-2"
+                                        onclick="GISTools.loadCSV()">
+                                    Load CSV
                                 </button>
 
-                                <button class="btn btn-danger btn-custom w-100"
-                                        onclick="clearCSV()">
-                                    Clear CSV Layer
-                                </button>
-
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ================= MAP TOOLS ================= -->
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed"
-                                    type="button"
-                                    data-bs-toggle="collapse"
-                                    data-bs-target="#mapTools">
-                                Map Tools
-                            </button>
-                        </h2>
-
-                        <div id="mapTools"
-                             class="accordion-collapse collapse"
-                             data-bs-parent="#gisControlsAccordion">
-
-                            <div class="accordion-body">
-
-                                <button id="measureBtn"
-                                        class="btn btn-outline-secondary w-100 mb-2"
-                                        onclick="toggleMeasure()">
-                                    Enable Measure Tool
-                                </button>
-
-                                <button class="btn btn-outline-warning w-100 mb-2" onclick="undoLastPoint()">
-                                    Undo Last Point
-                                </button>
-
-                                <button class="btn btn-outline-danger w-100 mb-2" onclick="clearMeasurement()">
-                                    Clear Measurement
+                                <button class="btn btn-danger w-100"
+                                        onclick="GISTools.clearCSV()">
+                                    Clear CSV
                                 </button>
 
                             </div>
@@ -226,118 +166,54 @@ $hideNavbar = true;
 
                     <!-- ================= FILE CONVERTER ================= -->
                     <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed"
-                                    type="button"
-                                    data-bs-toggle="collapse"
-                                    data-bs-target="#fileConverter">
-                                File Converter
-                            </button>
-                        </h2>
+                        <button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#convert">
+                            File Converter
+                        </button>
 
-                        <div id="fileConverter"
-                             class="accordion-collapse collapse"
-                             data-bs-parent="#gisControlsAccordion">
+                        <div id="convert" class="accordion-collapse collapse">
 
                             <div class="accordion-body">
 
-                                <input type="file" id="zipFile"
-                                       class="form-control mb-2" accept=".zip">
+                                <input type="file" id="zipFile" class="form-control mb-2">
 
-                                <label>GeoJSON File Name</label>
-                                <input type="text" id="filename"
+                                <input type="text"
+                                       id="geojsonName"
                                        class="form-control mb-2"
-                                       placeholder="Enter file name">
+                                       placeholder="GeoJSON name">
 
-                                <button class="btn btn-success w-100"
-                                        onclick="convertAndSave()">
-                                    GeoJSON Convert
+                                <button class="btn btn-primary w-100"
+                                        onclick="GISTools.convertShp()">
+                                    Convert SHP
                                 </button>
-
-                                <div id="status" class="mt-2"></div>
 
                             </div>
                         </div>
                     </div>
 
                 </div>
-
             </div>
         </div>
 
-        <!-- CONTEXT MENU -->
-        <div id="contextMenu" style="
-            position:absolute;
-            display:none;
-            background:#fff;
-            border:1px solid #ccc;
-            border-radius:6px;
-            box-shadow:0 2px 6px rgba(0,0,0,0.2);
-            z-index:999;
-            padding:8px;
-            width:180px;
-        ">
-            <button class="btn btn-sm btn-primary w-100 mb-1"
-                    onclick="openNearbySearch()">
-                Find Nearby Projects
-            </button>
-
-            <button id="bufferBtn"
-                    class="btn btn-sm btn-success w-100"
-                    onclick="createBufferArea()">
-                Create Buffer
-            </button>
-
-            <button class="btn btn-sm btn-danger w-100 mb-1"
-                    onclick="clearAllBuffers()">
-                Clear All Buffers
-            </button>
-        </div>
-
-        <!-- BUFFER INPUT PANEL -->
-        <div id="bufferPanel" style="
-            position:absolute;
-            display:none;
-            background:#fff;
-            border:1px solid #ccc;
-            border-radius:8px;
-            padding:12px;
-            box-shadow:0 3px 10px rgba(0,0,0,0.2);
-            z-index:1000;
-            width:220px;
-        ">
-            <label><b>Buffer Distance (meters)</b></label>
-            <input type="number" id="bufferDistance"
-                class="form-control mt-1 mb-2"
-                placeholder="Enter meters">
-
-            <button class="btn btn-sm btn-success w-100 mb-1"
-                    onclick="applyBuffer()">
-                Apply
-            </button>
-
-            <button class="btn btn-sm btn-secondary w-100"
-                    onclick="closeBufferPanel()">
-                Cancel
-            </button>
-        </div>
-
-        <!-- MAP AREA -->
+        <!-- ================= MAP ================= -->
         <div class="main-content">
             <div id="map"></div>
         </div>
 
     </div>
 </div>
-
-<!-- Scripts -->
+<!-- ================= LIBS ================= -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://unpkg.com/shpjs@latest/dist/shp.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
-<script src="{{ asset('js/gisApp-Map.js') }}"></script>
 
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC9mTWnANz3Mm-Km933gvoxOv5Wp57P3NM&libraries=geometry&callback=initMap" async defer></script>
+<!-- ================= GIS ENGINE ================= -->
+<script src="{{ asset('js/gis/utils.js') }}"></script>
+<script src="{{ asset('js/gis/core.js') }}"></script>
+<script src="{{ asset('js/gis/layers.js') }}"></script>
+<script src="{{ asset('js/gis/analysis.js') }}"></script>
+<script src="{{ asset('js/gis/tools.js') }}"></script>
+<script src="{{ asset('js/gis/ui.js') }}"></script>
 
 @endauth
-
 @endsection

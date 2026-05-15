@@ -104,3 +104,53 @@
     margin-top: 8px;
 }
 
+
+.leaflet-interactive {
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+}
+
+/* ================= SPATIAL ANALYSIS ================= */
+
+.spatial-analysis-card {
+    background: #f8f9fa;
+    border: 1px solid #dfe6e9;
+    border-radius: 10px;
+    padding: 15px;
+    margin-top: 10px;
+}
+
+/* Label */
+.spatial-analysis-card label {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 15px;
+}
+
+/* Select Dropdown */
+.analysis-select {
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    padding: 10px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    background: #ffffff;
+}
+
+/* Focus State */
+.analysis-select:focus {
+    border-color: #57ddb3;
+    box-shadow: 0 0 0 0.15rem rgba(87, 221, 179, 0.25);
+}
+
+/* Buttons */
+.spatial-analysis-card .btn {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+/* Hover Effects */
+.spatial-analysis-card .btn:hover {
+    transform: translateY(-1px);
+}

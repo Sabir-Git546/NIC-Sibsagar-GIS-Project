@@ -54,7 +54,7 @@
     </a>
 
     <div class="collapse submenu" id="reportMenu">
-        <a href="#" class="submenu-link">
+        <a href="{{ route('reports.index') }}" class="submenu-link">
             Generate Report
         </a>
 
