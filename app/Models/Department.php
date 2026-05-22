@@ -14,6 +14,19 @@ class Department extends Model
 
     protected $fillable = [
         'deptname',
-        'deptdescription'
+        'deptdescription',
+        'unitid'
     ];
+
+    // =========================
+    // RELATION: Department → Unit
+    // =========================
+    public function unit()
+    {
+        return $this->belongsTo(
+            AdministrativeUnit::class,
+            'unitid',
+            'unitid'
+        );
+    }
 }

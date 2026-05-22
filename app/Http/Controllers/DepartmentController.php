@@ -3,74 +3,133 @@
 namespace App\Http\Controllers;
 
 use App\Models\Department;
+use App\Models\AdministrativeUnit;
 use Illuminate\Http\Request;
+use App\Services\AuditService;
 
 class DepartmentController extends Controller
 {
-    // show all departments details
+    // =========================
+    // LIST DEPARTMENTS
+    // =========================
     public function index()
     {
-        $departments = Department::orderBy('deptid', 'asc')->get();
+        $departments = Department::with('unit')
+            ->orderBy('deptid', 'asc')
+            ->paginate(10)
+
+            ->withQueryString();
+
         return view('departments.viewDepartment', compact('departments'));
     }
 
-    // department add form
+    // =========================
+    // CREATE FORM
+    // =========================
     public function create()
     {
-        return view('departments.addDepartment');
+        $units = AdministrativeUnit::orderBy('unitname', 'asc')->get();
+
+        return view('departments.addDepartment', compact('units'));
     }
 
-    // store departments
+    // =========================
+    // STORE DEPARTMENT
+    // =========================
     public function store(Request $request)
     {
         $request->validate([
             'deptname' => 'required|string|max:100',
             'deptdescription' => 'nullable|string|max:255',
+            'unitid' => 'required|exists:administrative_units,unitid',
         ]);
 
-        Department::create([
-            'deptname' => $request->deptname,
-            'deptdescription' => $request->deptdescription,
+        $department = Department::create([
+            'deptname' => trim($request->deptname),
+            'deptdescription' => trim($request->deptdescription),
+            'unitid' => $request->unitid,
         ]);
 
-        return redirect()->route('department.index')
-                         ->with('success', 'Department added successfully!');
+        AuditService::log(
+            'CREATE',
+            'DEPARTMENT',
+            'Department created: ' . $department->deptid,
+            null,
+            $department->toArray()
+        );
+
+        return redirect()
+            ->route('department.index')
+            ->with('success', 'Department added successfully!');
     }
 
-    // show department edit form
+    // =========================
+    // EDIT FORM
+    // =========================
     public function edit($deptid)
     {
         $department = Department::where('deptid', $deptid)->firstOrFail();
-        return view('departments.editDepartment', compact('department'));
+
+        $units = AdministrativeUnit::orderBy('unitname', 'asc')->get();
+
+        return view('departments.editDepartment', compact('department', 'units'));
     }
 
-   // update department details 
+    // =========================
+    // UPDATE DEPARTMENT
+    // =========================
     public function update(Request $request, $deptid)
     {
         $request->validate([
             'deptname' => 'required|string|max:100',
             'deptdescription' => 'nullable|string|max:255',
+            'unitid' => 'required|exists:administrative_units,unitid',
         ]);
 
         $department = Department::where('deptid', $deptid)->firstOrFail();
 
+        $oldData = $department->toArray();
+
         $department->update([
-            'deptname' => $request->deptname,
-            'deptdescription' => $request->deptdescription,
+            'deptname' => trim($request->deptname),
+            'deptdescription' => trim($request->deptdescription),
+            'unitid' => $request->unitid,
         ]);
 
-        return redirect()->route('department.index')
-                         ->with('success', 'Department updated successfully!');
+        AuditService::log(
+            'UPDATE',
+            'DEPARTMENT',
+            'Department updated: ' . $deptid,
+            $oldData,
+            $department->toArray()
+        );
+
+        return redirect()
+            ->route('department.index')
+            ->with('success', 'Department updated successfully!');
     }
 
-    // delete department
+    // =========================
+    // DELETE DEPARTMENT
+    // =========================
     public function destroy($deptid)
     {
         $department = Department::where('deptid', $deptid)->firstOrFail();
 
+        $oldData = $department->toArray();
+
         $department->delete();
 
-        return redirect()->route('department.index')
-                         ->with('success', 'Department deleted successfully!');
+        AuditService::log(
+            'DELETE',
+            'DEPARTMENT',
+            'Department deleted: ' . $deptid,
+            $oldData,
+            null
+        );
+
+        return redirect()
+            ->route('department.index')
+            ->with('success', 'Department deleted successfully!');
     }
 }

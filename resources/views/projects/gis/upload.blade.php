@@ -1,5 +1,5 @@
-@php 
-    $hideNavbar = true; 
+@php
+    $hideNavbar = true;
 @endphp
 
 @extends('layouts.master')
@@ -10,100 +10,136 @@
 
 @section('content')
 
+@auth
+
 <div class="dashboard-container">
 
-@include('layouts.left-nav')
+    {{-- LEFT SIDEBAR --}}
+    @include('layouts.left-nav')
 
-<div class="main-content">
+    {{-- MAIN CONTENT --}}
+    <div class="main-content">
 
-    <!-- Page Title -->
-    <div class="mb-4">
-        <h3>Upload GIS Data</h3>
-        <p class="text-muted">
-            Project : <strong>{{ $project->projectname }}</strong>
-        </p>
-    </div>
+        {{-- PAGE HEADER --}}
+        <div class="d-flex justify-content-between align-items-center mb-3">
 
-    <!-- Upload Form -->
-    <div class="card">
-        <div class="card-header bg-success text-white">
-            Upload GIS Layer
+            <h3>
+                Upload GIS File :
+                {{ $project->projectname }}
+            </h3>
+
+            <a href="{{ route('gis.view', $project->projectid) }}"
+               class="btn btn-warning">
+                Back
+            </a>
+
         </div>
 
-        <div class="card-body">
+        {{-- SUCCESS MESSAGE --}}
+        @if(session('success'))
 
-            {{-- Validation Errors --}}
-            @if($errors->any())
-                <div class="alert alert-danger">
-                    <ul class="mb-0">
-                        @foreach($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
+            <div class="alert alert-success">
+                {{ session('success') }}
+            </div>
 
-            <form action="{{ route('gis.upload.store', $project->projectid) }}" 
-                  method="POST" 
-                  enctype="multipart/form-data">
+        @endif
 
-                @csrf
+        {{-- ERROR MESSAGE --}}
+        @if(session('error'))
 
-                <!-- Project ID -->
-                <div class="mb-3">
-                    <label class="form-label">Project ID</label>
-                    <input type="text"
-                           class="form-control"
-                           value="{{ $project->projectid }}"
-                           readonly>
-                </div>
+            <div class="alert alert-danger">
+                {{ session('error') }}
+            </div>
 
-                <!-- Layer Name -->
-                <div class="mb-3">
-                    <label class="form-label">Layer Name</label>
-                    <input type="text"
-                           name="layername"
-                           class="form-control"
-                           placeholder="Enter GIS Layer Name"
-                           required>
-                </div>
+        @endif
 
-                <!-- GIS File Upload -->
-                <div class="mb-3">
-                    <label class="form-label">Upload GIS File</label>
-                    <input type="file"
-                           name="gisfile"
-                           class="form-control"
-                           accept=".geojson,.json,.zip"
-                           required>
+        {{-- VALIDATION ERRORS --}}
+        @if($errors->any())
 
-                    <small class="text-muted">
-                        Supported formats: GeoJSON, JSON, Zipped Shapefile
-                    </small>
-                </div>
+            <div class="alert alert-danger">
 
-                <!-- Buttons -->
-                <div class="d-flex justify-content-between">
+                <ul class="mb-0">
 
-                    <a href="{{ route('gis.view', $project->projectid) }}"
-                       class="btn btn-secondary">
-                        Back
-                    </a>
+                    @foreach($errors->all() as $error)
 
+                        <li>{{ $error }}</li>
+
+                    @endforeach
+
+                </ul>
+
+            </div>
+
+        @endif
+
+        {{-- UPLOAD CARD --}}
+        <div class="card shadow-sm">
+
+            <div class="card-header bg-dark text-white">
+                GIS Upload Form
+            </div>
+
+            <div class="card-body">
+
+                <form action="{{ route('gis.upload.store', $project->projectid) }}"
+                      method="POST"
+                      enctype="multipart/form-data">
+
+                    @csrf
+
+                    {{-- LAYER NAME --}}
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Layer Name
+                        </label>
+
+                        <input type="text"
+                               name="layername"
+                               class="form-control"
+                               placeholder="Enter GIS layer name"
+                               required>
+
+                    </div>
+
+                    {{-- FILE --}}
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            GeoJSON File
+                        </label>
+
+                        <input type="file"
+                               name="gisfile"
+                               class="form-control"
+                               accept=".json,.geojson"
+                               required>
+
+                        <small class="text-muted">
+                            Supported formats:
+                            .json, .geojson
+                        </small>
+
+                    </div>
+
+                    {{-- SUBMIT --}}
                     <button type="submit"
                             class="btn btn-success">
-                        Upload GIS
+
+                        Upload GIS File
+
                     </button>
 
-                </div>
+                </form>
 
-            </form>
+            </div>
 
         </div>
+
     </div>
 
 </div>
 
-</div>
+@endauth
 
 @endsection

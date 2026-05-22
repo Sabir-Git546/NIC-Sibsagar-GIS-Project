@@ -2,6 +2,8 @@
 
 @section('content')
 
+@auth
+
 <div class="container mt-4">
 
     <h4>Upload GIS File for: {{ $project->projectname }}</h4>
@@ -31,5 +33,7 @@
     </form>
 
 </div>
+
+@endauth
 
 @endsection

@@ -1,198 +1,312 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\LoginController;   
+use Illuminate\Support\Facades\Auth;
+
+/*
+|--------------------------------------------------------------------------
+| CONTROLLERS
+|--------------------------------------------------------------------------
+*/
+use App\Http\Controllers\LoginController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\GisController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectGisController;
+use App\Http\Controllers\DistBoundController;
+use App\Http\Controllers\ProjectDocumentController;
+use App\Http\Controllers\ApprovalController;
+use App\Http\Controllers\AuditLogController;
+use App\Http\Controllers\ReportController; // ADDED
 
 
-#All Index & Login Routes
+/*
+|--------------------------------------------------------------------------
+| PUBLIC ROUTES
+|--------------------------------------------------------------------------
+*/
 
-//index page route
-Route::get('/', function () {
-    return view('index');
-})->name('index');
+Route::get('/', fn () => view('index'))->name('index');
 
-//show loginpage
-Route::get('/login', 
-    [LoginController::class, 'showLoginForm'])
-->name('login');
+Route::get('/login', [LoginController::class, 'showLoginForm'])
+    ->name('login');
 
-//submit login credential and role
-Route::post('/login', 
-    [LoginController::class, 'login'])
-->name('login.submit');
+Route::post('/login', [LoginController::class, 'login'])
+    ->name('login.submit');
 
-//login routes
-Route::get('/dashboard', function () {
+Route::post('/logout', function (\Illuminate\Http\Request $request) {
 
-    if (!session()->has('userid')) {
-        return redirect()->route('login');
-    }
-    return view('dashboard', [
-        'hideNavbar' => true
-    ]);
-})->name('dashboard');
+    Auth::logout();
 
-//logout route
-Route::post('/logout', function () {
-    session()->invalidate();
-    session()->regenerateToken();
-    return redirect()->route('index');
+    $request->session()->invalidate();
+
+    $request->session()->regenerateToken();
+
+    return redirect()->route('login');
+
 })->name('logout');
 
 
-#All Department Module Routes
+/*
+|--------------------------------------------------------------------------
+| AUTHENTICATED ROUTES
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth'])->group(function () {
 
-// Show all departments
-Route::get('/departments', 
-    [DepartmentController::class, 'index']
-)->name('department.index');
+    /*
+    |--------------------------------------------------------------------------
+    | DASHBOARD
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/dashboard', [DashboardController::class, 'dashboard'])
+        ->name('dashboard');
 
-// Show add department form
-Route::get('/departments/create', 
-    [DepartmentController::class, 'create']
-)->name('department.create');
+    Route::get('/department-projects/{deptname}', [DashboardController::class, 'departmentProjects'])
+        ->name('dashboard.department.projects');
 
-// Store department
-Route::post('/departments', 
-    [DepartmentController::class, 'store']
-)->name('department.store');
+    Route::get('/status-projects/{status}', [DashboardController::class, 'statusProjects'])
+        ->name('dashboard.status.projects');
 
-// Show edit form
-Route::get('/departments/{deptid}/edit', 
-    [DepartmentController::class, 'edit']
-)->name('department.edit');
+    /*
+    |--------------------------------------------------------------------------
+    | ADMIN MODULES (ROLE: 1)
+    |--------------------------------------------------------------------------
+    */
+    Route::middleware('role:1')
+        ->prefix('admin')
+        ->group(function () {
 
-// Update department
-Route::put('/departments/{deptid}', 
-    [DepartmentController::class, 'update']
-)->name('department.update');
+        /*
+        |--------------------------------------------------------------------------
+        | DEPARTMENTS
+        |--------------------------------------------------------------------------
+        */
+        Route::get('/departments', [DepartmentController::class, 'index'])
+            ->name('department.index');
 
-// Delete department (recommended)
-Route::delete('/departments/{deptid}', 
-    [DepartmentController::class, 'destroy']
-)->name('department.destroy');
+        Route::get('/departments/create', [DepartmentController::class, 'create'])
+            ->name('department.create');
 
+        Route::post('/departments', [DepartmentController::class, 'store'])
+            ->name('department.store');
 
-#All User Module Routes
+        Route::get('/departments/{deptid}/edit', [DepartmentController::class, 'edit'])
+            ->name('department.edit');
 
-// show user table route
-Route::get('/users', 
-    [UserController::class, 'index']
-)->name('user.index');
+        Route::put('/departments/{deptid}', [DepartmentController::class, 'update'])
+            ->name('department.update');
 
-// Show add user form
-Route::get('/users/create', 
-    [UserController::class, 'create']
-)->name('user.create');
-
-// Store user
-Route::post('/users', 
-    [UserController::class, 'store']
-)->name('user.store');
-
-// Show edit user form
-Route::get('/users/{userid}/edit', 
-    [UserController::class, 'edit']
-)->name('user.edit');
-
-// Update existing user
-Route::put('/users/{userid}', 
-    [UserController::class, 'update']
-)->name('user.update');
-
-// Delete user
-Route::delete('/users/{userid}', 
-    [UserController::class, 'destroy']
-)->name('user.destroy');
-
-#All GIS Module Routes
-
-// Show Google Map page
-Route::get('/gis/google-map', 
-    [GisController::class, 'googleMap']
-)->name('gis.googleMap');
-
-// Show Advanced GIS App
-Route::get('/gis/gis-app', 
-    [GisController::class, 'gisApp']
-)->name('gis.gisApp');
-
-// Convert SHP ZIP → GeoJSON and save
-Route::post('/save-geojson', 
-    [GisController::class, 'saveGeojson']
-)->name('save-geojson');
-
-// Fetch GIS layer from PostGIS
-Route::get('/gis/layer/{layername}', 
-    [GisController::class, 'getLayer']
-)->name('gis.layer');
+        Route::delete('/departments/{deptid}', [DepartmentController::class, 'destroy'])
+            ->name('department.destroy');
 
 
-#All Projects Module Routes
-// Show allprojects in table
-Route::get('/projects', 
-    [ProjectController::class, 'index']
-)->name('projects.index');
+        /*
+        |--------------------------------------------------------------------------
+        | USERS
+        |--------------------------------------------------------------------------
+        */
+        Route::get('/users', [UserController::class, 'index'])
+            ->name('user.index');
 
-// Show add project form
-Route::get('/projects/create', 
-    [ProjectController::class, 'create']
-)->name('projects.create');
+        Route::get('/users/create', [UserController::class, 'create'])
+            ->name('user.create');
 
-// Store project
-Route::post('/projects', 
-    [ProjectController::class, 'store']
-)->name('projects.store');
+        Route::post('/users', [UserController::class, 'store'])
+            ->name('user.store');
 
-// Show edit form
-Route::get('/projects/{projectid}/edit', 
-    [ProjectController::class, 'edit']
-)->name('projects.edit');
+        Route::get('/users/{userid}/edit', [UserController::class, 'edit'])
+            ->name('user.edit');
 
-// Update project
-Route::put('/projects/{projectid}', 
-    [ProjectController::class, 'update']
-)->name('projects.update');
+        Route::put('/users/{userid}', [UserController::class, 'update'])
+            ->name('user.update');
 
-// Delete project (recommended)
-Route::delete('/projects/{projectid}', 
-    [ProjectController::class, 'destroy']
-)->name('projects.destroy');
+        Route::delete('/users/{userid}', [UserController::class, 'destroy'])
+            ->name('user.destroy');
 
 
-# Project GIS Routes
+        /*
+        |--------------------------------------------------------------------------
+        | DISTRICT BOUNDARY
+        |--------------------------------------------------------------------------
+        */
+        Route::get('/dist-bound', [DistBoundController::class, 'index'])
+            ->name('dist-bound.index');
 
-Route::get('/projects/{projectid}/gis', 
-    [ProjectGisController::class,'view']
-)->name('gis.view');
+        Route::get('/dist-bound/create', [DistBoundController::class, 'create'])
+            ->name('dist-bound.create');
 
-Route::get('/projects/{projectid}/gis/upload',
-    [ProjectGisController::class,'uploadForm']
-)->name('gis.upload.form');
+        Route::post('/dist-bound', [DistBoundController::class, 'store'])
+            ->name('dist-bound.store');
 
-Route::post('/projects/{projectid}/gis/upload',
-    [ProjectGisController::class,'store']
-)->name('gis.upload.store');
+        Route::get('/dist-bound/{unitid}/edit', [DistBoundController::class, 'edit'])
+            ->name('dist-bound.edit');
 
-Route::delete('/projects/{projectid}/gis/delete/{layername}',
-    [ProjectGisController::class, 'deleteLayer']
-)->name('gis.delete.layer');
+        Route::put('/dist-bound/{unitid}', [DistBoundController::class, 'update'])
+            ->name('dist-bound.update');
 
-
-# Project Document Upload
-//
-Route::get('/projects/{id}/documents/create', 
-    [ProjectDocumentController::class, 'create']
-)->name('projects.documents.create');
-
-//
-Route::post('/projects/{id}/documents/store', 
-    [ProjectDocumentController::class, 'store']
-)->name('projects.documents.store');
+        Route::delete('/dist-bound/{unitid}', [DistBoundController::class, 'destroy'])
+            ->name('dist-bound.destroy');
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | APPROVALS
+        |--------------------------------------------------------------------------
+        */
+        Route::get('/approvals', [ApprovalController::class, 'index'])
+            ->name('approvals.index');
+
+        Route::post('/approvals/approve/{id}', [ApprovalController::class, 'approve'])
+            ->name('approvals.approve');
+
+        Route::post('/approvals/reject/{id}', [ApprovalController::class, 'reject'])
+            ->name('approvals.reject');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | AUDIT LOGS
+        |--------------------------------------------------------------------------
+        */
+        Route::get('/audit-logs', [AuditLogController::class, 'index'])
+            ->name('audit.logs');
+    });
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | GIS MODULE (ROLE: 1,2,3)
+    |--------------------------------------------------------------------------
+    */
+    Route::middleware('role:1,2,3')
+        ->prefix('gis')
+        ->group(function () {
+
+        Route::get('/google-map', [GisController::class, 'googleMap'])
+            ->name('gis.googleMap');
+
+        Route::get('/gis-app', [GisController::class, 'gisApp'])
+            ->name('gis.gisApp');
+
+        Route::get('/layer/{layername}', [GisController::class, 'getLayer'])
+            ->name('gis.layer');
+
+        Route::post('/save-geojson', [GisController::class, 'saveGeojson'])
+            ->name('save-geojson');
+    });
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | PROJECT MODULE (ROLE: 1,2,3)
+    |--------------------------------------------------------------------------
+    */
+    Route::middleware('role:1,2,3')
+        ->prefix('projects')
+        ->group(function () {
+
+        /*
+        |--------------------------------------------------------------------------
+        | PROJECT CRUD
+        |--------------------------------------------------------------------------
+        */
+        Route::get('/', [ProjectController::class, 'index'])
+            ->name('projects.index');
+
+        Route::get('/create', [ProjectController::class, 'create'])
+            ->name('projects.create');
+
+        Route::post('/', [ProjectController::class, 'store'])
+            ->name('projects.store');
+
+        Route::get('/{projectid}/edit', [ProjectController::class, 'edit'])
+            ->name('projects.edit');
+
+        Route::put('/{projectid}', [ProjectController::class, 'update'])
+            ->name('projects.update');
+
+        Route::delete('/{projectid}', [ProjectController::class, 'destroy'])
+            ->name('projects.destroy');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | PROJECT GIS
+        |--------------------------------------------------------------------------
+        */
+        Route::get('/{projectid}/gis', [ProjectGisController::class, 'view'])
+            ->name('gis.view');
+
+        Route::get('/{projectid}/gis/upload', [ProjectGisController::class, 'uploadForm'])
+            ->name('gis.upload.form');
+
+        Route::post('/{projectid}/gis/upload', [ProjectGisController::class, 'store'])
+            ->name('gis.upload.store');
+
+        Route::delete('/{projectid}/gis/delete/{layername}', [ProjectGisController::class, 'deleteLayer'])
+            ->name('gis.delete.layer');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | PROJECT DOCUMENTS
+        |--------------------------------------------------------------------------
+        */
+        Route::get('/{id}/documents/create', [ProjectDocumentController::class, 'create'])
+            ->name('projects.documents.create');
+
+        Route::post('/{id}/documents/store', [ProjectDocumentController::class, 'store'])
+            ->name('projects.documents.store');
+    });
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | REPORT MODULE (ROLE: 1,2,3)
+    |--------------------------------------------------------------------------
+    */
+    Route::middleware('role:1,2,3')
+        ->prefix('reports')
+        ->group(function () {
+
+        /*
+        |--------------------------------------------------------------------------
+        | REPORT DASHBOARD
+        |--------------------------------------------------------------------------
+        */
+        Route::get('/', [ReportController::class, 'index'])
+            ->name('reports.index');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | PROJECT REPORTS
+        |--------------------------------------------------------------------------
+        */
+        Route::get('/projects', [ReportController::class, 'projectReport'])
+            ->name('reports.projects');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | PDF EXPORT
+        |--------------------------------------------------------------------------
+        */
+        Route::get('/projects/pdf', [ReportController::class, 'exportPdf'])
+            ->name('reports.projects.pdf');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | EXCEL EXPORT
+        |--------------------------------------------------------------------------
+        */
+        Route::get('/projects/excel', [ReportController::class, 'exportExcel'])
+            ->name('reports.projects.excel');
+
+    });
+
+});
