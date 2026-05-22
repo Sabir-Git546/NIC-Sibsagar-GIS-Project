@@ -24,8 +24,11 @@ class ProjectGisController extends Controller
 
         // GIS LAYERS
         $gisdata = DB::table('project_gis_data')
+
             ->where('projectid', $projectid)
-            ->get();
+            ->orderBy('gisdataid', 'DESC')
+            ->paginate(10)
+            ->withQueryString();
 
         return view(
             'projects.gis.view',
@@ -38,13 +41,22 @@ class ProjectGisController extends Controller
     // =========================
     public function uploadForm($projectid)
     {
+        // PROJECT
         $project = DB::table('projects')
             ->where('projectid', $projectid)
             ->first();
 
+        // GIS DATA
+        $gisdata = DB::table('project_gis_data')
+            ->where('projectid', $projectid)
+            ->get();
+
         return view(
             'projects.gis.upload',
-            compact('project')
+            compact(
+                'project',
+                'gisdata'
+            )
         );
     }
 

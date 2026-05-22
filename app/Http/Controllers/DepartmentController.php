@@ -16,7 +16,9 @@ class DepartmentController extends Controller
     {
         $departments = Department::with('unit')
             ->orderBy('deptid', 'asc')
-            ->get();
+            ->paginate(10)
+
+            ->withQueryString();
 
         return view('departments.viewDepartment', compact('departments'));
     }

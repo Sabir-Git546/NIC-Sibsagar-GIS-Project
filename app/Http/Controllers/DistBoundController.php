@@ -7,14 +7,6 @@ use App\Models\AdministrativeUnit;
 
 class DistBoundController extends Controller
 {
-    // ===============================
-    // CONSTRUCTOR
-    // ===============================
-    public function __construct()
-    {
-        // ADMIN ONLY ACCESS
-        $this->middleware('permission:admin');
-    }
 
     /**
      * ===============================

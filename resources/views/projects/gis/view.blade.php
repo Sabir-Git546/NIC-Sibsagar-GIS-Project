@@ -49,7 +49,7 @@
 
                 <tbody>
 
-                @forelse($gisdata as $gis)
+                @forelse($gisdata ?? [] as $gis)
 
                 <tr>
                     <td>{{ $gis->gisdataid }}</td>
@@ -85,6 +85,17 @@
                 </tbody>
 
             </table>
+
+            {{-- PAGINATION --}}
+            @if(method_exists($gisdata, 'links') && $gisdata->hasPages())
+
+                <div class="mt-4 d-flex justify-content-center">
+
+                    {{ $gisdata->links() }}
+
+                </div>
+
+            @endif
 
         </div>
     </div>

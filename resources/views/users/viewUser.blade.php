@@ -81,6 +81,17 @@
                     </tbody>
                 </table>
 
+                {{-- PAGINATION --}}
+                @if(method_exists($users, 'links') && $users->hasPages())
+
+                    <div class="mt-4 d-flex justify-content-center">
+
+                        {{ $users->links() }}
+
+                    </div>
+
+                @endif
+
             </div>
         </div>
 

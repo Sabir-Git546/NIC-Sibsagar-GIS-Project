@@ -353,6 +353,17 @@
 
                     </table>
 
+                    {{-- PAGINATION --}}
+                    @if(method_exists($projects, 'links') && $projects->hasPages())
+
+                        <div class="mt-4 d-flex justify-content-center">
+
+                            {{ $projects->links() }}
+
+                        </div>
+
+                    @endif
+
                 </div>
 
             </div>

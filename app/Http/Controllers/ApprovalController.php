@@ -23,7 +23,9 @@ class ApprovalController extends Controller
             ->leftJoin('users', 'users.userid', '=', 'approval_requests.userid')
             ->select('approval_requests.*', 'users.userid as username')
             ->orderByDesc('approval_requests.created_at')
-            ->get();
+            ->paginate(10)
+
+            ->withQueryString();
 
         return view('admin.permission_approvals', compact('requests'));
     }

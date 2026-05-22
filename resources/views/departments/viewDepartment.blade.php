@@ -77,6 +77,17 @@
                     </tbody>
                 </table>
 
+                {{-- PAGINATION --}}
+                @if(method_exists($departments, 'links') && $departments->hasPages())
+
+                    <div class="mt-4 d-flex justify-content-center">
+
+                        {{ $departments->links() }}
+
+                    </div>
+
+                @endif
+
             </div>
         </div>
 

@@ -64,6 +64,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'dashboard'])
         ->name('dashboard');
 
+    Route::get('/department-projects/{deptname}', [DashboardController::class, 'departmentProjects'])
+        ->name('dashboard.department.projects');
+
+    Route::get('/status-projects/{status}', [DashboardController::class, 'statusProjects'])
+        ->name('dashboard.status.projects');
 
     /*
     |--------------------------------------------------------------------------

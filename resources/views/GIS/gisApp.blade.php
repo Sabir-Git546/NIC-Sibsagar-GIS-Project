@@ -22,9 +22,16 @@ $hideNavbar = true;
 
         <!-- ================= SIDEBAR ================= -->
         <div class="side-control-panel" id="controlPanel">
+            <a href="{{ route('dashboard') }}"
+            class="btn btn-success d-flex align-items-center gap-2 mb-4 shadow-sm rounded-pill px-3 py-2">
 
+                <i class="fas fa-arrow-left"></i>
+
+                <span><b>Dashboard</b></span>
+
+            </a>
             <div class="panel-content">
-
+                
                 <div class="panel-title">
                     <span>GIS Control Panel</span>
                     <button class="close-btn" onclick="GISUI.closePanel()">✖</button>
@@ -183,7 +190,7 @@ $hideNavbar = true;
 
                                 <button class="btn btn-primary w-100"
                                         onclick="GISTools.convertShp()">
-                                    Convert SHP
+                                    Convert File
                                 </button>
 
                             </div>

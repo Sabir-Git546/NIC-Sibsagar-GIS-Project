@@ -17,15 +17,21 @@ class DashboardController extends Controller
     // =========================
     public function dashboard()
     {
-        // COUNTS
+        // =========================
+        // TOTAL COUNTS
+        // =========================
         $totalDepartments = Department::count();
 
         $totalUsers = UserModel::count();
 
         $totalProjects = Project::count();
 
+
+        // =========================
         // CURRENT USER
+        // =========================
         $user = Auth::user();
+
 
         // =========================
         // RECENT ACTIVITY
@@ -33,7 +39,7 @@ class DashboardController extends Controller
 
         if ($user && $user->roleid == 1) {
 
-            // ADMIN → SEE ALL
+            // ADMIN → SEE ALL ACTIVITIES
             $recentActivity = DB::table('approval_requests')
 
                 ->leftJoin(
@@ -56,7 +62,10 @@ class DashboardController extends Controller
                     'projects.projectname'
                 )
 
-                ->orderBy('approval_requests.created_at', 'desc')
+                ->orderBy(
+                    'approval_requests.created_at',
+                    'desc'
+                )
 
                 ->limit(5)
 
@@ -64,7 +73,7 @@ class DashboardController extends Controller
 
         } else {
 
-            // USER → ONLY OWN
+            // USER → ONLY OWN ACTIVITIES
             $recentActivity = DB::table('approval_requests')
 
                 ->leftJoin(
@@ -92,13 +101,61 @@ class DashboardController extends Controller
                     'projects.projectname'
                 )
 
-                ->orderBy('approval_requests.created_at', 'desc')
+                ->orderBy(
+                    'approval_requests.created_at',
+                    'desc'
+                )
 
                 ->limit(5)
 
                 ->get();
         }
 
+
+        // =========================
+        // DEPARTMENT PROJECT STATS
+        // =========================
+        $departmentStats = DB::table('projects')
+
+            ->join(
+                'departments',
+                'projects.deptid',
+                '=',
+                'departments.deptid'
+            )
+
+            ->select(
+                'departments.deptname',
+                DB::raw(
+                    'COUNT(projects.projectid) as total'
+                )
+            )
+
+            ->groupBy(
+                'departments.deptname'
+            )
+
+            ->get();
+
+
+        // =========================
+        // PROJECT STATUS STATS
+        // =========================
+        $statusStats = DB::table('projects')
+
+            ->select(
+                'status',
+                DB::raw('COUNT(*) as total')
+            )
+
+            ->groupBy('status')
+
+            ->get();
+
+
+        // =========================
+        // RETURN DASHBOARD VIEW
+        // =========================
         return view('dashboard', compact(
 
             'totalDepartments',
@@ -107,8 +164,87 @@ class DashboardController extends Controller
 
             'totalProjects',
 
-            'recentActivity'
+            'recentActivity',
 
+            'departmentStats',
+
+            'statusStats'
         ));
+    }
+
+
+    // =========================
+    // DEPARTMENT PROJECT LIST
+    // =========================
+    public function departmentProjects($deptname)
+    {
+        $projects = DB::table('projects')
+
+            ->join(
+                'departments',
+                'projects.deptid',
+                '=',
+                'departments.deptid'
+            )
+
+            ->where(
+                'departments.deptname',
+                $deptname
+            )
+
+            ->select(
+                'projects.projectid',
+                'projects.projectname',
+                'projects.status',
+                'departments.deptname'
+            )
+
+            ->paginate(5);
+
+
+        return view(
+            'partials.department-projects',
+            compact(
+                'projects',
+                'deptname'
+            )
+        );
+    }
+
+    // =========================
+    // STATUS PROJECT LIST
+    // =========================
+    public function statusProjects($status)
+    {
+        $projects = DB::table('projects')
+
+            ->join(
+                'departments',
+                'projects.deptid',
+                '=',
+                'departments.deptid'
+            )
+
+            ->where(
+                'projects.status',
+                $status
+            )
+
+            ->select(
+                'projects.projectid',
+                'projects.projectname',
+                'projects.status',
+                'departments.deptname'
+            )
+
+            ->paginate(5);
+
+        return view(
+            'partials.status-projects',
+            compact(
+                'projects',
+                'status'
+            )
+        );
     }
 }

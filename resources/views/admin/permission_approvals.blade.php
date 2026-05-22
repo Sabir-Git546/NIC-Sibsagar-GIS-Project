@@ -217,6 +217,11 @@
 
                 </table>
 
+                <!-- PAGINATION -->
+                <div class="d-flex justify-content-center mt-4">
+                    {{ $requests->links() }}
+                </div>
+
             </div>
 
         </div>

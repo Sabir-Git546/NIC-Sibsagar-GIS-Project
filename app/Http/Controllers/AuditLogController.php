@@ -34,7 +34,7 @@ class AuditLogController extends Controller
         }
 
         return view('admin.audit_logs', [
-            'logs' => $query->paginate(50)
+            'logs' => $query->paginate(10)
         ]);
     }
 }

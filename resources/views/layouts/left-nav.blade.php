@@ -104,15 +104,15 @@
                     View Users
                 </a>
 
-                <a href="#" class="submenu-link">
+               <!-- <a href="#" class="submenu-link">
                     Assign Roles
-                </a>
+                </a> -->
 
             </div>
 
 
             <!-- District Management -->
-            <a class="menu-link" data-bs-toggle="collapse" href="#administrativeMenu">
+        <!--    <a class="menu-link" data-bs-toggle="collapse" href="#administrativeMenu">
                 District Management
             </a>
 
@@ -124,9 +124,9 @@
 
                 <a href="{{ route('dist-bound.index') }}" class="submenu-link">
                     View Administration
-                </a>
+                </a>  
 
-            </div>
+            </div>  -->
 
 
             <!-- User Activity -->

@@ -105,3 +105,14 @@
     background: #2f3e4d;
     color: #ffffff;
 }
+
+.chart-container {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    margin: auto;
+}
+
+#departmentChart {
+    max-height: 400px;
+}

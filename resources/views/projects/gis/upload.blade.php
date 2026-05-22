@@ -1,5 +1,5 @@
-@php 
-    $hideNavbar = true; 
+@php
+    $hideNavbar = true;
 @endphp
 
 @extends('layouts.master')
@@ -14,84 +14,129 @@
 
 <div class="dashboard-container">
 
-@include('layouts.left-nav')
+    {{-- LEFT SIDEBAR --}}
+    @include('layouts.left-nav')
 
-<div class="main-content">
+    {{-- MAIN CONTENT --}}
+    <div class="main-content">
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3>GIS Data for Project : {{ $project->projectname }}</h3>
+        {{-- PAGE HEADER --}}
+        <div class="d-flex justify-content-between align-items-center mb-3">
 
-        <div>
-            <a href="{{ route('projects.index') }}"
+            <h3>
+                Upload GIS File :
+                {{ $project->projectname }}
+            </h3>
+
+            <a href="{{ route('gis.view', $project->projectid) }}"
                class="btn btn-warning">
                 Back
             </a>
 
-            <a href="{{ route('gis.upload.form', $project->projectid) }}"
-               class="btn btn-success">
-                Upload GIS File
-            </a>
         </div>
-    </div>
 
-    <div class="card">
-        <div class="card-body">
+        {{-- SUCCESS MESSAGE --}}
+        @if(session('success'))
 
-            <table class="table table-bordered table-striped">
+            <div class="alert alert-success">
+                {{ session('success') }}
+            </div>
 
-                <thead class="table-dark">
-                    <tr>
-                        <th>GIS ID</th>
-                        <th>Layer Name</th>
-                        <th>Attributes</th>
-                        <th>Uploaded At</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
+        @endif
 
-                <tbody>
+        {{-- ERROR MESSAGE --}}
+        @if(session('error'))
 
-                @forelse($gisdata as $gis)
+            <div class="alert alert-danger">
+                {{ session('error') }}
+            </div>
 
-                <tr>
-                    <td>{{ $gis->gisdataid }}</td>
-                    <td>{{ $gis->layername }}</td>
-                    <td>{{ json_encode($gis->attributes) }}</td>
-                    <td>{{ $gis->uploadedat }}</td>
+        @endif
 
-                    <td>
-                        <form action="{{ route('gis.delete.layer', [$project->projectid, $gis->layername]) }}" 
-                              method="POST"
-                              onsubmit="return confirm('Delete this entire GIS layer?')">
+        {{-- VALIDATION ERRORS --}}
+        @if($errors->any())
 
-                            @csrf
-                            @method('DELETE')
+            <div class="alert alert-danger">
 
-                            <button class="btn btn-danger btn-sm">
-                                Delete
-                            </button>
-                        </form>
-                    </td>
-                </tr>
+                <ul class="mb-0">
 
-                @empty
+                    @foreach($errors->all() as $error)
 
-                <tr>
-                    <td colspan="5" class="text-center">
-                        No GIS Data Available
-                    </td>
-                </tr>
+                        <li>{{ $error }}</li>
 
-                @endforelse
+                    @endforeach
 
-                </tbody>
+                </ul>
 
-            </table>
+            </div>
+
+        @endif
+
+        {{-- UPLOAD CARD --}}
+        <div class="card shadow-sm">
+
+            <div class="card-header bg-dark text-white">
+                GIS Upload Form
+            </div>
+
+            <div class="card-body">
+
+                <form action="{{ route('gis.upload.store', $project->projectid) }}"
+                      method="POST"
+                      enctype="multipart/form-data">
+
+                    @csrf
+
+                    {{-- LAYER NAME --}}
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Layer Name
+                        </label>
+
+                        <input type="text"
+                               name="layername"
+                               class="form-control"
+                               placeholder="Enter GIS layer name"
+                               required>
+
+                    </div>
+
+                    {{-- FILE --}}
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            GeoJSON File
+                        </label>
+
+                        <input type="file"
+                               name="gisfile"
+                               class="form-control"
+                               accept=".json,.geojson"
+                               required>
+
+                        <small class="text-muted">
+                            Supported formats:
+                            .json, .geojson
+                        </small>
+
+                    </div>
+
+                    {{-- SUBMIT --}}
+                    <button type="submit"
+                            class="btn btn-success">
+
+                        Upload GIS File
+
+                    </button>
+
+                </form>
+
+            </div>
 
         </div>
-    </div>
 
-</div>
+    </div>
 
 </div>
 

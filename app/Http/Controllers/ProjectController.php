@@ -25,7 +25,8 @@ class ProjectController extends Controller
             $projects->where('deptid', $user->deptid);
         }
 
-        $projects = $projects->orderByDesc('projectid')->get();
+        $projects = $projects->orderByDesc('projectid')->paginate(10)
+            ->withQueryString();
 
         return view('projects.viewProject', compact('projects'));
     }

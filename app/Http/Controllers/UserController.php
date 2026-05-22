@@ -16,7 +16,10 @@ class UserController extends Controller
     // =========================
     public function index()
     {
-        $users = UserModel::with(['department', 'role'])->get();
+        $users = UserModel::with(['department', 'role'])
+            ->paginate(10)
+
+            ->withQueryString();
 
         return view('users.viewUser', compact('users'));
     }
