@@ -4,132 +4,355 @@ namespace App\Http\Controllers;
 
 use App\Models\Department;
 use App\Models\AdministrativeUnit;
+
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Database\QueryException;
+
 use App\Services\AuditService;
 
 class DepartmentController extends Controller
 {
-    // =========================
-    // LIST DEPARTMENTS
-    // =========================
+    // show department table in viewdepartment
     public function index()
     {
-        $departments = Department::with('unit')
-            ->orderBy('deptid', 'asc')
-            ->paginate(10)
+        try {
 
-            ->withQueryString();
+            $departments = Department::with('unit')
+                ->orderBy('deptid', 'asc')
+                ->paginate(10)
+                ->withQueryString();
 
-        return view('departments.viewDepartment', compact('departments'));
+            return view(
+                'departments.viewDepartment',
+                compact('departments')
+            );
+
+        } catch (\Exception $e) {
+
+            Log::error('Department Index Error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'user' => auth()->id()
+            ]);
+
+            return back()->with(
+                'error',
+                'Unable to load departments.'
+            );
+        }
     }
 
-    // =========================
-    // CREATE FORM
-    // =========================
+
+    // department add form
     public function create()
     {
-        $units = AdministrativeUnit::orderBy('unitname', 'asc')->get();
+        try {
 
-        return view('departments.addDepartment', compact('units'));
+            $units = AdministrativeUnit::orderBy(
+                'unitname',
+                'asc'
+            )->get();
+
+            return view(
+                'departments.addDepartment',
+                compact('units')
+            );
+
+        } catch (\Exception $e) {
+
+            Log::error('Department Create Form Error', [
+                'message' => $e->getMessage(),
+                'user' => auth()->id()
+            ]);
+
+            return back()->with(
+                'error',
+                'Unable to load create department page.'
+            );
+        }
     }
 
-    // =========================
-    // STORE DEPARTMENT
-    // =========================
+
+    // store form data in department table
     public function store(Request $request)
     {
-        $request->validate([
-            'deptname' => 'required|string|max:100',
-            'deptdescription' => 'nullable|string|max:255',
-            'unitid' => 'required|exists:administrative_units,unitid',
-        ]);
+        try {
 
-        $department = Department::create([
-            'deptname' => trim($request->deptname),
-            'deptdescription' => trim($request->deptdescription),
-            'unitid' => $request->unitid,
-        ]);
+            $data = $request->validate([
+                'deptname' => 'required|string|max:100',
+                'deptdescription' => 'nullable|string|max:255',
+                'unitid' => 'required|exists:administrative_units,unitid',
+            ]);
 
-        AuditService::log(
-            'CREATE',
-            'DEPARTMENT',
-            'Department created: ' . $department->deptid,
-            null,
-            $department->toArray()
-        );
+            DB::beginTransaction();
 
-        return redirect()
-            ->route('department.index')
-            ->with('success', 'Department added successfully!');
+            // Duplicate prevention
+            $exists = Department::whereRaw(
+                'LOWER(deptname) = ?',
+                [strtolower(trim($data['deptname']))]
+            )->exists();
+
+            if ($exists) {
+
+                DB::rollBack();
+
+                return back()->with(
+                    'error',
+                    'Department already exists.'
+                );
+            }
+
+            $department = Department::create([
+                'deptname' => trim($request->deptname),
+                'deptdescription' => trim($request->deptdescription),
+                'unitid' => $request->unitid,
+            ]);
+
+            AuditService::log(
+                'CREATE',
+                'DEPARTMENT',
+                'Department created: ' . $department->deptid,
+                null,
+                $department->toArray()
+            );
+
+            DB::commit();
+
+            return redirect()
+                ->route('department.index')
+                ->with(
+                    'success',
+                    'Department added successfully!'
+                );
+
+        } catch (QueryException $e) {
+
+            DB::rollBack();
+
+            Log::error('Department Store Database Error', [
+                'message' => $e->getMessage(),
+                'user' => auth()->id()
+            ]);
+
+            return back()->with(
+                'error',
+                'Database error occurred while creating department.'
+            );
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            Log::error('Department Store Error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'user' => auth()->id()
+            ]);
+
+            return back()->with(
+                'error',
+                'Unable to create department.'
+            );
+        }
     }
 
-    // =========================
-    // EDIT FORM
-    // =========================
+
+    // department details edit form
     public function edit($deptid)
     {
-        $department = Department::where('deptid', $deptid)->firstOrFail();
+        try {
 
-        $units = AdministrativeUnit::orderBy('unitname', 'asc')->get();
+            $department = Department::where(
+                'deptid',
+                $deptid
+            )->firstOrFail();
 
-        return view('departments.editDepartment', compact('department', 'units'));
+            $units = AdministrativeUnit::orderBy(
+                'unitname',
+                'asc'
+            )->get();
+
+            return view(
+                'departments.editDepartment',
+                compact('department', 'units')
+            );
+
+        } catch (\Exception $e) {
+
+            Log::error('Department Edit Error', [
+                'message' => $e->getMessage(),
+                'deptid' => $deptid,
+                'user' => auth()->id()
+            ]);
+
+            return back()->with(
+                'error',
+                'Unable to load edit department page.'
+            );
+        }
     }
 
-    // =========================
-    // UPDATE DEPARTMENT
-    // =========================
+
+    // department details update in db
     public function update(Request $request, $deptid)
     {
-        $request->validate([
-            'deptname' => 'required|string|max:100',
-            'deptdescription' => 'nullable|string|max:255',
-            'unitid' => 'required|exists:administrative_units,unitid',
-        ]);
+        try {
 
-        $department = Department::where('deptid', $deptid)->firstOrFail();
+            $data = $request->validate([
+                'deptname' => 'required|string|max:100',
+                'deptdescription' => 'nullable|string|max:255',
+                'unitid' => 'required|exists:administrative_units,unitid',
+            ]);
 
-        $oldData = $department->toArray();
+            DB::beginTransaction();
 
-        $department->update([
-            'deptname' => trim($request->deptname),
-            'deptdescription' => trim($request->deptdescription),
-            'unitid' => $request->unitid,
-        ]);
+            $department = Department::where(
+                'deptid',
+                $deptid
+            )->firstOrFail();
 
-        AuditService::log(
-            'UPDATE',
-            'DEPARTMENT',
-            'Department updated: ' . $deptid,
-            $oldData,
-            $department->toArray()
-        );
+            // Duplicate prevention
+            $exists = Department::whereRaw(
+                'LOWER(deptname) = ?',
+                [strtolower(trim($data['deptname']))]
+            )
+                ->where('deptid', '!=', $deptid)
+                ->exists();
 
-        return redirect()
-            ->route('department.index')
-            ->with('success', 'Department updated successfully!');
+            if ($exists) {
+
+                DB::rollBack();
+
+                return back()->with(
+                    'error',
+                    'Department name already exists.'
+                );
+            }
+
+            $oldData = $department->toArray();
+
+            $department->update([
+                'deptname' => trim($request->deptname),
+                'deptdescription' => trim($request->deptdescription),
+                'unitid' => $request->unitid,
+            ]);
+
+            AuditService::log(
+                'UPDATE',
+                'DEPARTMENT',
+                'Department updated: ' . $deptid,
+                $oldData,
+                $department->fresh()->toArray()
+            );
+
+            DB::commit();
+
+            return redirect()
+                ->route('department.index')
+                ->with(
+                    'success',
+                    'Department updated successfully!'
+                );
+
+        } catch (QueryException $e) {
+
+            DB::rollBack();
+
+            Log::error('Department Update Database Error', [
+                'message' => $e->getMessage(),
+                'deptid' => $deptid,
+                'user' => auth()->id()
+            ]);
+
+            return back()->with(
+                'error',
+                'Database error occurred while updating department.'
+            );
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            Log::error('Department Update Error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'deptid' => $deptid,
+                'user' => auth()->id()
+            ]);
+
+            return back()->with(
+                'error',
+                'Unable to update department.'
+            );
+        }
     }
 
-    // =========================
-    // DELETE DEPARTMENT
-    // =========================
+
+    // delete a department record from db
     public function destroy($deptid)
     {
-        $department = Department::where('deptid', $deptid)->firstOrFail();
+        try {
 
-        $oldData = $department->toArray();
+            DB::beginTransaction();
 
-        $department->delete();
+            $department = Department::where(
+                'deptid',
+                $deptid
+            )->firstOrFail();
 
-        AuditService::log(
-            'DELETE',
-            'DEPARTMENT',
-            'Department deleted: ' . $deptid,
-            $oldData,
-            null
-        );
+            $oldData = $department->toArray();
 
-        return redirect()
-            ->route('department.index')
-            ->with('success', 'Department deleted successfully!');
+            $department->delete();
+
+            AuditService::log(
+                'DELETE',
+                'DEPARTMENT',
+                'Department deleted: ' . $deptid,
+                $oldData,
+                null
+            );
+
+            DB::commit();
+
+            return redirect()
+                ->route('department.index')
+                ->with(
+                    'success',
+                    'Department deleted successfully!'
+                );
+
+        } catch (QueryException $e) {
+
+            DB::rollBack();
+
+            Log::error('Department Delete Database Error', [
+                'message' => $e->getMessage(),
+                'deptid' => $deptid,
+                'user' => auth()->id()
+            ]);
+
+            return back()->with(
+                'error',
+                'Database error occurred while deleting department.'
+            );
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            Log::error('Department Delete Error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'deptid' => $deptid,
+                'user' => auth()->id()
+            ]);
+
+            return back()->with(
+                'error',
+                'Unable to delete department.'
+            );
+        }
     }
 }

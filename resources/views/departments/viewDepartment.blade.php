@@ -13,71 +13,139 @@
 <div class="dashboard-container">
 
     <!-- SIDEBAR -->
-    
     @include('layouts.left-nav')
 
     <!-- MAIN CONTENT -->
     <div class="main-content">
 
-        <h1 class="dashboard-title mb-4">View Departments</h1>
+        <!-- PAGE HEADER -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
 
-        <div class="card">
+            <h1 class="dashboard-title">
+                View Departments
+            </h1>
+
+        </div>
+
+
+        <!-- CARD -->
+        <div class="card shadow-sm">
+
             <div class="card-body">
 
-                <table class="table table-bordered table-striped">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>ID</th>
-                            <th>Department Name</th>
-                            <th>Description</th>
-                            <th>Administrative Unit</th>
-                            <th width="120">Action</th>
-                        </tr>
-                    </thead>
+                <!-- TABLE RESPONSIVE -->
+                <div class="table-responsive">
 
-                    <tbody>
+                    <table class="table table-bordered table-striped align-middle">
 
-                        @forelse($departments as $dept)
-                        <tr>
-                            <td>{{ $dept->deptid }}</td>
-                            <td>{{ $dept->deptname }}</td>
-                            <td>{{ $dept->deptdescription }}</td>
-                            <td>{{ $dept->unit->unitname ?? '-' }}</td>
+                        <thead class="table-dark">
 
-                            <td class="text-center">
+                            <tr>
 
-                                <a href="{{ route('department.edit', $dept->deptid) }}"
-                                class="btn btn-sm btn-primary">
-                                    edit
-                                </a>
+                                <th>ID</th>
 
-                                <form action="{{ route('department.destroy', $dept->deptid) }}"
-                                    method="POST"
-                                    style="display:inline;">
-                                    @csrf
-                                    @method('DELETE')
+                                <th>Department Name</th>
 
-                                    <button type="submit"
-                                            class="btn btn-sm btn-danger"
-                                            onclick="return confirm('Are you sure?')">
-                                        delete
-                                    </button>
-                                </form>
+                                <th>Description</th>
 
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="5" class="text-center">
-                                No Departments Found
-                            </td>
-                        </tr>
-                        @endforelse
+                                <th>Administrative Unit</th>
 
-                    </tbody>
-                </table>
+                                <th width="150">
+                                    Action
+                                </th>
 
-                {{-- PAGINATION --}}
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            @forelse($departments as $dept)
+
+                                <tr>
+
+                                    <!-- ID -->
+                                    <td>
+                                        {{ $dept->deptid }}
+                                    </td>
+
+
+                                    <!-- NAME -->
+                                    <td>
+                                        {{ $dept->deptname }}
+                                    </td>
+
+
+                                    <!-- DESCRIPTION -->
+                                    <td>
+                                        {{ $dept->deptdescription ?: '-' }}
+                                    </td>
+
+
+                                    <!-- UNIT -->
+                                    <td>
+                                        {{ $dept->unit->unitname ?? '-' }}
+                                    </td>
+
+
+                                    <!-- ACTION -->
+                                    <td class="text-center">
+
+                                        <!-- EDIT -->
+                                        <a href="{{ route('department.edit', $dept->deptid) }}"
+                                           class="btn btn-sm btn-primary">
+
+                                            Edit
+
+                                        </a>
+
+
+                                        <!-- DELETE -->
+                                        <form action="{{ route('department.destroy', $dept->deptid) }}"
+                                              method="POST"
+                                              class="d-inline">
+
+                                            @csrf
+                                            @method('DELETE')
+
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-danger"
+                                                    onclick="return confirm('Are you sure you want to delete this department?')">
+
+                                                Delete
+
+                                            </button>
+
+                                        </form>
+
+                                    </td>
+
+                                </tr>
+
+                            @empty
+
+                                <tr>
+
+                                    <td colspan="5"
+                                        class="text-center text-muted py-4">
+
+                                        No Departments Found
+
+                                    </td>
+
+                                </tr>
+
+                            @endforelse
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+                <!-- PAGINATION -->
                 @if(method_exists($departments, 'links') && $departments->hasPages())
 
                     <div class="mt-4 d-flex justify-content-center">
@@ -89,9 +157,11 @@
                 @endif
 
             </div>
+
         </div>
 
     </div>
+
 </div>
 
 @endsection

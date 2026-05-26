@@ -12,76 +12,156 @@
 
 <div class="dashboard-container">
 
+    <!-- SIDEBAR -->
     @include('layouts.left-nav')
 
+    <!-- MAIN CONTENT -->
     <div class="main-content">
 
-        <h1 class="dashboard-title mb-4">View Users</h1>
+        <!-- PAGE HEADER -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
 
-        <div class="card">
+            <h1 class="dashboard-title">
+                View Users
+            </h1>
+
+        </div>
+
+
+        <!-- CARD -->
+        <div class="card shadow-sm">
+
             <div class="card-body">
 
-                <table class="table table-bordered table-striped">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>ID</th>
-                            <th>User ID</th>
-                            <th>User Name</th>
-                            <th>Email</th>
-                            <th>Department</th>
-                            <th>Role</th>
-                            <th width="120">Action</th>
-                        </tr>
-                    </thead>
+                <!-- RESPONSIVE TABLE -->
+                <div class="table-responsive">
 
-                    <tbody>
+                    <table class="table table-bordered table-striped align-middle">
 
-                        @forelse($users as $user)
-                        <tr>
-                            <td>{{ $user->id }}</td>
-                            <td>{{ $user->userid }}</td>
-                            <td>{{ $user->username }}</td>
-                            <td>{{ $user->email }}</td>
+                        <thead class="table-dark">
 
-                            <td>{{ $user->department->deptname ?? '-' }}</td>
-                            <td>{{ $user->role->rolename ?? '-' }}</td>
+                            <tr>
 
-                            <td class="text-center">
+                                <th>ID</th>
 
-                                <a href="{{ route('user.edit', $user->id) }}"
-                                   class="btn btn-sm btn-primary">
-                                    edit
-                                </a>
+                                <th>User ID</th>
 
-                                <form action="{{ route('user.destroy', $user->id) }}"
-                                      method="POST"
-                                      style="display:inline;">
-                                    @csrf
-                                    @method('DELETE')
+                                <th>User Name</th>
 
-                                    <button type="submit"
-                                            class="btn btn-sm btn-danger"
-                                            onclick="return confirm('Are you sure?')">
-                                        delete
-                                    </button>
+                                <th>Email</th>
 
-                                </form>
+                                <th>Department</th>
 
-                            </td>
-                        </tr>
+                                <th>Role</th>
 
-                        @empty
-                        <tr>
-                            <td colspan="9" class="text-center">
-                                No Users Found
-                            </td>
-                        </tr>
-                        @endforelse
+                                <th width="160">
+                                    Action
+                                </th>
 
-                    </tbody>
-                </table>
+                            </tr>
 
-                {{-- PAGINATION --}}
+                        </thead>
+
+
+                        <tbody>
+
+                            @forelse($users as $user)
+
+                                <tr>
+
+                                    <!-- ID -->
+                                    <td>
+                                        {{ $user->id }}
+                                    </td>
+
+
+                                    <!-- USER ID -->
+                                    <td>
+                                        {{ $user->userid }}
+                                    </td>
+
+
+                                    <!-- USER NAME -->
+                                    <td>
+                                        {{ $user->username }}
+                                    </td>
+
+
+                                    <!-- EMAIL -->
+                                    <td>
+                                        {{ $user->email }}
+                                    </td>
+
+
+                                    <!-- DEPARTMENT -->
+                                    <td>
+                                        {{ $user->department->deptname ?? '-' }}
+                                    </td>
+
+
+                                    <!-- ROLE -->
+                                    <td>
+                                        {{ $user->role->rolename ?? '-' }}
+                                    </td>
+
+
+                                    <!-- ACTION -->
+                                    <td class="text-center">
+
+                                        <!-- EDIT -->
+                                        <a href="{{ route('user.edit', $user->id) }}"
+                                           class="btn btn-sm btn-primary">
+
+                                            Edit
+
+                                        </a>
+
+
+                                        <!-- DELETE -->
+                                        <form action="{{ route('user.destroy', $user->id) }}"
+                                              method="POST"
+                                              class="d-inline">
+
+                                            @csrf
+                                            @method('DELETE')
+
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-danger"
+                                                    onclick="return confirm('Are you sure you want to delete this user?')">
+
+                                                Delete
+
+                                            </button>
+
+                                        </form>
+
+                                    </td>
+
+                                </tr>
+
+                            @empty
+
+                                <tr>
+
+                                    <td colspan="7"
+                                        class="text-center text-muted py-4">
+
+                                        No Users Found
+
+                                    </td>
+
+                                </tr>
+
+                            @endforelse
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+                <!-- PAGINATION -->
                 @if(method_exists($users, 'links') && $users->hasPages())
 
                     <div class="mt-4 d-flex justify-content-center">
@@ -93,9 +173,11 @@
                 @endif
 
             </div>
+
         </div>
 
     </div>
+
 </div>
 
 @endsection

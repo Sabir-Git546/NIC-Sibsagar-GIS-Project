@@ -23,9 +23,37 @@ return Application::configure(basePath: dirname(__DIR__))
 
     })
 
-    ->withExceptions(function (Exceptions $exceptions): void {
+    ->withExceptions(function (Exceptions $exceptions) {
 
-        //
+        /*
+        |--------------------------------------------------------------------------
+        | GLOBAL EXCEPTION LOGGING
+        |--------------------------------------------------------------------------
+        */
+
+        $exceptions->report(function (Throwable $e) {
+
+            \Log::error('Application Exception', [
+
+                'message' => $e->getMessage(),
+
+                'file' => $e->getFile(),
+
+                'line' => $e->getLine(),
+
+                'url' => request()->fullUrl(),
+
+                'method' => request()->method(),
+
+                'ip' => request()->ip(),
+
+                'user' => auth()->check()
+                    ? auth()->user()->userid
+                    : 'guest',
+
+            ]);
+
+        });
 
     })
 

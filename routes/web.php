@@ -310,3 +310,37 @@ Route::middleware(['auth'])->group(function () {
     });
 
 });
+
+//Testing route
+Route::get('/captcha-test', function () {
+    return '
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Captcha Test</title>
+        <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    </head>
+    <body style="padding:50px;">
+
+        <h2>Captcha Test</h2>
+
+        <form>
+
+            <div class="g-recaptcha"
+                 data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI">
+            </div>
+
+        </form>
+
+    </body>
+    </html>
+    ';
+});
+
+Route::get('/test500', function () {
+    abort(500);
+});
+
+Route::get('/test403', function () {
+    abort(403);
+});

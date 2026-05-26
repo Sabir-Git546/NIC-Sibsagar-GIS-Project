@@ -12,89 +12,158 @@
 
 <div class="dashboard-container">
 
+    {{-- SIDEBAR --}}
     @include('layouts.left-nav')
 
+    {{-- MAIN CONTENT --}}
     <div class="main-content">
 
         <div class="card shadow-sm">
+
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Edit Department</h5>
+
+                <h5 class="mb-0">
+                    Edit Department
+                </h5>
+
             </div>
+
 
             <div class="card-body">
 
-                {{-- Validation Errors --}}
-                @if($errors->any())
-                    <div class="alert alert-danger">
-                        <ul class="mb-0">
-                            @foreach($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
+                <form action="{{ route('department.update', $department->deptid) }}"
+                      method="POST">
 
-                <form action="{{ route('department.update', $department->deptid) }}" method="POST">
                     @csrf
                     @method('PUT')
 
-                    {{-- Department ID --}}
+
+                    {{-- DEPARTMENT ID --}}
                     <div class="mb-3">
-                        <label class="form-label">Department ID</label>
+
+                        <label class="form-label">
+                            Department ID
+                        </label>
+
                         <input type="text"
-                            class="form-control"
-                            value="{{ $department->deptid }}"
-                            readonly>
+                               class="form-control"
+                               value="{{ $department->deptid }}"
+                               readonly>
+
                     </div>
 
-                    {{-- Department Name --}}
+
+                    {{-- DEPARTMENT NAME --}}
                     <div class="mb-3">
-                        <label class="form-label">Department Name</label>
+
+                        <label class="form-label">
+                            Department Name
+                        </label>
+
                         <input type="text"
-                            name="deptname"
-                            class="form-control"
-                            value="{{ old('deptname', $department->deptname) }}"
-                            required>
+                               name="deptname"
+                               value="{{ old('deptname', $department->deptname) }}"
+                               class="form-control @error('deptname') is-invalid @enderror"
+                               required>
+
+                        @error('deptname')
+
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+
+                        @enderror
+
                     </div>
 
-                    {{-- Department Description --}}
+
+                    {{-- DEPARTMENT DESCRIPTION --}}
                     <div class="mb-3">
-                        <label class="form-label">Department Description</label>
+
+                        <label class="form-label">
+                            Department Description
+                        </label>
+
                         <textarea name="deptdescription"
-                                class="form-control"
-                                rows="3">{{ old('deptdescription', $department->deptdescription) }}</textarea>
+                                  class="form-control @error('deptdescription') is-invalid @enderror"
+                                  rows="3">{{ old('deptdescription', $department->deptdescription) }}</textarea>
+
+                        @error('deptdescription')
+
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+
+                        @enderror
+
                     </div>
 
-                    {{-- ✅ ADMINISTRATIVE UNIT DROPDOWN --}}
-                    <div class="mb-3">
-                        <label class="form-label">Administrative Unit</label>
 
-                        <select name="unitid" class="form-select" required>
-                            <option value="">Select Unit</option>
+                    {{-- ADMINISTRATIVE UNIT --}}
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Administrative Unit
+                        </label>
+
+                        <select name="unitid"
+                                class="form-select @error('unitid') is-invalid @enderror"
+                                required>
+
+                            <option value="">
+                                Select Unit
+                            </option>
 
                             @foreach($units as $unit)
+
                                 <option value="{{ $unit->unitid }}"
-                                    {{ $department->unitid == $unit->unitid ? 'selected' : '' }}>
-                                    {{ $unit->unitname }} ({{ $unit->unittype }})
+                                    {{ old('unitid', $department->unitid) == $unit->unitid ? 'selected' : '' }}>
+
+                                    {{ $unit->unitname }}
+                                    ({{ $unit->unittype }})
+
                                 </option>
+
                             @endforeach
 
                         </select>
+
+                        @error('unitid')
+
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+
+                        @enderror
+
                     </div>
 
+
+                    {{-- BUTTONS --}}
                     <div class="d-flex justify-content-between">
-                        <a href="{{ route('department.index') }}" class="btn btn-secondary">
+
+                        <a href="{{ route('department.index') }}"
+                           class="btn btn-secondary">
+
                             Back
+
                         </a>
 
-                        <button type="submit" class="btn btn-success">
+
+                        <button type="submit"
+                                class="btn btn-success"
+                                onclick="this.disabled=true; this.form.submit();">
+
                             Update Department
+
                         </button>
+
                     </div>
 
                 </form>
 
             </div>
+
         </div>
 
     </div>
