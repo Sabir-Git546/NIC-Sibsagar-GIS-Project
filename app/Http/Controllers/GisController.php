@@ -241,6 +241,8 @@ class GisController extends Controller
             "
             SELECT
 
+                projectid,
+
                 ST_AsGeoJSON(geometry) AS geometry,
 
                 attributes
@@ -271,12 +273,15 @@ class GisController extends Controller
             $properties = json_decode(
                 $feature->attributes,
                 true
-            );
-
+            ) ?? [];
 
             // INCLUDE LAYERNAME
             $properties['layername'] =
                 $layername;
+
+            // INCLUDE PROJECT ID
+            $properties['projectid'] =
+                $feature->projectid;
 
 
             $geojson['features'][] = [

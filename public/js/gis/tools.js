@@ -266,14 +266,8 @@ window.GISTools = {
 
                                         let popup =
                                             `
-                                            <div style="
-                                                min-width:200px;
-                                                font-family:Arial;
-                                            ">
-                                                <h4 style="
-                                                    margin:0 0 8px 0;
-                                                    color:#2c3e50;
-                                                ">
+                                            <div style="min-width:200px; font-family:Arial;">
+                                                <h4 style="margin:0 0 8px 0; color:#2c3e50;">
                                                     🗂 Converted Feature
                                                 </h4>
                                             `;
@@ -287,10 +281,7 @@ window.GISTools = {
 
                                             popup +=
                                                 `
-                                                <div style="
-                                                    font-size:12px;
-                                                    margin-bottom:4px;
-                                                ">
+                                                <div style="font-size:12px; margin-bottom:4px;">
                                                     <b>${key}:</b>
                                                     ${props[key]}
                                                 </div>

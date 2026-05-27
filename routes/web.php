@@ -249,6 +249,9 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/{projectid}/gis/delete/{layername}', [ProjectGisController::class, 'deleteLayer'])
             ->name('gis.delete.layer');
 
+        Route::post('/{projectid}/gis/layers', [ProjectGisController::class, 'storeLayer']) //route to save buffered files
+            ->name('gis.layer.store');
+
 
         /*
         |--------------------------------------------------------------------------
@@ -343,4 +346,12 @@ Route::get('/test500', function () {
 
 Route::get('/test403', function () {
     abort(403);
+});
+
+Route::get('/test404', function () {
+    abort(404);
+});
+
+Route::get('/test419', function () {
+    abort(419);
 });

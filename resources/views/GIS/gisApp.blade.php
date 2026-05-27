@@ -115,7 +115,11 @@ $hideNavbar = true;
                                             Buffer Analysis
                                         </option>
 
-                                        <option value="overlap">
+                                        <option value="#">
+                                            Create New Layer
+                                        </option>
+
+                                    <!--    <option value="overlap">
                                             Overlap Analysis
                                         </option>
 
@@ -125,13 +129,18 @@ $hideNavbar = true;
 
                                         <option value="perimeter">
                                             Perimeter Measurement
-                                        </option>
+                                        </option>   -->
 
-                                    </select>
+                                    </select>   
 
                                     <button class="btn btn-primary w-100 mb-2"
                                             onclick="GISAnalysis.startSelectedAnalysis()">
                                         Run Analysis
+                                    </button>
+
+                                     <button id="saveLayerBtn" class="btn btn-success w-100 mb-2 d-none"
+                                            onclick="GISAnalysis.openSaveLayerCard()">
+                                        Save Layer
                                     </button>
 
                                     <button class="btn btn-danger w-100"
@@ -208,6 +217,55 @@ $hideNavbar = true;
 
     </div>
 </div>
+
+<div id="saveLayerCard" class="gis-modal d-none">
+
+    <div class="gis-modal-backdrop" onclick="GISAnalysis.closeSaveLayerCard()"></div>
+
+    <div class="gis-modal-window">
+
+        <div class="gis-modal-header">
+            <h5>Save Buffered Layer</h5>
+            <button onclick="GISAnalysis.closeSaveLayerCard()">✖</button>
+        </div>
+
+        <div class="gis-modal-body">
+
+            <!-- ONLY LAYER NAME -->
+            <input
+                type="text"
+                id="newLayerName"
+                placeholder="Enter layer name (e.g. buffer_100m)"
+                class="form-control mb-2"
+            />
+
+            <!-- OPTIONAL -->
+            <textarea
+                id="layerDescription"
+                placeholder="Description (optional)"
+                class="form-control mb-2"
+            ></textarea>
+
+        </div>
+
+        <div class="gis-modal-footer">
+
+            <button class="btn btn-secondary"
+                onclick="GISAnalysis.closeSaveLayerCard()">
+                Cancel
+            </button>
+
+            <button class="btn btn-primary"
+                onclick="GISAnalysis.saveLayer()">
+                Save
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
 <!-- ================= LIBS ================= -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
@@ -221,6 +279,8 @@ $hideNavbar = true;
 <script src="{{ asset('js/gis/analysis.js') }}"></script>
 <script src="{{ asset('js/gis/tools.js') }}"></script>
 <script src="{{ asset('js/gis/ui.js') }}"></script>
+
+
 
 @endauth
 @endsection

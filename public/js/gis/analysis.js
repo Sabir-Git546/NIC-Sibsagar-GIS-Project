@@ -6,6 +6,20 @@ window.GISAnalysis = {
     // STATE
     // =========================
     activeMode: null,
+    selectedProjectId: null,
+
+    // =========================
+    // BUFFER STATE
+    // =========================
+    bufferLayers: [],
+
+    selectedLayerForBuffer: null,
+
+    currentBufferedGeoJSON: null,
+
+    currentBufferDistance: null,
+
+    currentSelectedFeature: null,
 
     // =========================
     // DISTANCE STATE
@@ -19,13 +33,6 @@ window.GISAnalysis = {
     measurePopup: null,
 
     totalDistance: 0,
-
-    // =========================
-    // BUFFER STATE
-    // =========================
-    bufferLayers: [],
-
-    selectedLayerForBuffer: null,
 
     // =========================
     // START ANALYSIS
@@ -80,24 +87,6 @@ window.GISAnalysis = {
             case "buffer":
 
                 this.startBufferAnalysis();
-
-                break;
-
-            case "overlap":
-
-                this.startOverlapAnalysis();
-
-                break;
-
-            case "area":
-
-                this.startAreaAnalysis();
-
-                break;
-
-            case "perimeter":
-
-                this.startPerimeterAnalysis();
 
                 break;
         }
@@ -373,52 +362,75 @@ window.GISAnalysis = {
     },
 
     // =========================
-    // BUFFER ANALYSIS
+// BUFFER ANALYSIS
+// =========================
+startBufferAnalysis() {
+
+    GIS.map.getContainer().style.cursor = "pointer";
+
+    alert(
+        "Click any feature on map to create buffer"
+    );
+
     // =========================
-    startBufferAnalysis() {
+    // ATTACH BUFFER EVENTS
+    // =========================
+    Object.values(GIS.layers).forEach(layerGroup => {
 
-        GIS.map.getContainer().style.cursor =
-            "pointer";
+        if (!layerGroup || !layerGroup.eachLayer) return;
 
-        alert(
-            "Click any feature on map to create buffer"
-        );
+        layerGroup.eachLayer(featureLayer => {
 
-        // =========================
-        // ATTACH CLICK EVENTS
-        // =========================
-        Object.values(GIS.layers).forEach(layerGroup => {
+            // remove old buffer event
+            featureLayer.off(
+                "click",
+                GISAnalysis.handleBufferClick
+            );
 
-            layerGroup.eachLayer(layer => {
+            // attach buffer event
+            featureLayer.on(
+                "click",
+                GISAnalysis.handleBufferClick
+            );
 
-                layer.off(
-                    "click",
-                    GISAnalysis.handleBufferClick
-                );
-
-                layer.on(
-                    "click",
-                    GISAnalysis.handleBufferClick
-                );
-            });
         });
 
-        console.log(
-            "Buffer analysis started"
-        );
-    },
+    });
+
+    console.log("Buffer analysis started");
+},
 
     // =========================
     // HANDLE BUFFER CLICK
     // =========================
     handleBufferClick: function (e) {
 
-        if (
-            GISAnalysis.activeMode !==
-            "buffer"
-        ) return;
+       if (GISAnalysis.activeMode !== "buffer") return;
 
-        const layer = e.target;
+    const layer = e.propagatedFrom || e.target;
+
+    // =========================
+    //  AUTO PROJECT BINDING (ADD THIS)
+    // =========================
+    if (!GISAnalysis.selectedProjectId) {
+
+        // Try to extract from layer metadata
+        console.log("Feature:", layer.feature);
+            GISAnalysis.selectedProjectId =
+                layer.feature?.properties?.projectid ??
+                null;
+
+        console.log(
+            "Auto-bound project:",
+            GISAnalysis.selectedProjectId
+        );
+    }
+
+    //  SAFETY CHECK
+    if (!GISAnalysis.selectedProjectId) {
+        alert("No project context found for this layer");
+        return;
+    }
 
         // =========================
         // ASK DISTANCE
@@ -451,6 +463,22 @@ window.GISAnalysis = {
                 );
 
             // =========================
+            // STORE BUFFER DATA
+            // =========================
+            GISAnalysis.currentBufferedGeoJSON = {
+
+                type: "FeatureCollection",
+
+                features: [buffered]
+            };
+
+            GISAnalysis.currentBufferDistance =
+                distance;
+
+            GISAnalysis.currentSelectedFeature =
+                layer;
+
+            // =========================
             // RENDER BUFFER
             // =========================
             const bufferLayer =
@@ -473,10 +501,6 @@ window.GISAnalysis = {
             // STORE BUFFER
             // =========================
             GISAnalysis.bufferLayers.push(
-                bufferLayer
-            );
-
-            GIS.analysis.buffers.push(
                 bufferLayer
             );
 
@@ -504,6 +528,17 @@ window.GISAnalysis = {
                 `
             );
 
+            // =========================
+            // SHOW SAVE BUTTON
+            // =========================
+            document
+                .getElementById(
+                    "saveLayerBtn"
+                )
+                .classList.remove(
+                    "d-none"
+                );
+
             console.log(
                 "Buffer created"
             );
@@ -522,45 +557,119 @@ window.GISAnalysis = {
     },
 
     // =========================
-    // OVERLAP
+    // OPEN SAVE CARD
     // =========================
-    startOverlapAnalysis() {
+    openSaveLayerCard() {
 
-        alert(
-            "Overlap analysis mode started"
-        );
-
-        console.log(
-            "Overlap analysis started"
-        );
+        document
+            .getElementById(
+                "saveLayerCard"
+            )
+            .classList.remove(
+                "d-none"
+            );
     },
 
     // =========================
-    // AREA
+    // CLOSE SAVE CARD
     // =========================
-    startAreaAnalysis() {
+    closeSaveLayerCard() {
 
-        alert(
-            "Area analysis mode started"
-        );
-
-        console.log(
-            "Area analysis started"
-        );
+        document
+            .getElementById(
+                "saveLayerCard"
+            )
+            .classList.add(
+                "d-none"
+            );
     },
 
     // =========================
-    // PERIMETER
+    // SAVE BUFFER LAYER (UPDATED)
     // =========================
-    startPerimeterAnalysis() {
+    async saveLayer() {
 
-        alert(
-            "Perimeter analysis mode started"
-        );
+        console.log("Saving buffer layer...");
 
-        console.log(
-            "Perimeter analysis started"
-        );
+        // =========================
+        // VALIDATE BUFFER
+        // =========================
+        if (!this.currentBufferedGeoJSON) {
+            alert("No buffer available");
+            return;
+        }
+
+        const layerName = document.getElementById("newLayerName").value.trim();
+        const description = document.getElementById("layerDescription")?.value.trim();
+
+        if (!layerName) {
+            alert("Enter layer name");
+            return;
+        }
+
+        // =========================
+        // VALIDATE PROJECT
+        // =========================
+        const projectId = this.selectedProjectId;
+
+        if (!projectId) {
+            alert("No project selected");
+            return;
+        }
+
+        try {
+
+            const response = await fetch(`/projects/${projectId}/gis/layers`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify({
+
+                    layername: layerName,
+
+                    geojson: this.currentBufferedGeoJSON,
+
+                    layer_type: "buffer",
+
+                    bufferdistance: this.currentBufferDistance || 0,
+
+                    //description: description || null
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || "Save failed");
+            }
+
+            if (data.success) {
+
+                alert("Buffered layer saved successfully");
+
+                this.closeSaveLayerCard();
+            }
+
+        } catch (err) {
+
+            console.error(err);
+
+            alert(err.message || "Unexpected error");
+        }
+    },
+
+    // =========================
+    // OPEN SAVE LAYER CARD
+    // =========================
+    openSaveLayerCard() {
+        document.getElementById("saveLayerCard").classList.remove("d-none");
+    },
+
+    closeSaveLayerCard() {
+        document.getElementById("saveLayerCard").classList.add("d-none");
     },
 
     // =========================
@@ -617,7 +726,30 @@ window.GISAnalysis = {
         this.bufferLayers = [];
 
         // =========================
-        // RESET STATE
+        // HIDE SAVE BUTTON
+        // =========================
+        document
+            .getElementById(
+                "saveLayerBtn"
+            )
+            .classList.add(
+                "d-none"
+            );
+
+        // =========================
+        // RESET BUFFER STATE
+        // =========================
+       /* this.currentBufferedGeoJSON =
+            null;
+
+        this.currentBufferDistance =
+            null;
+
+        this.currentSelectedFeature =
+            null;   */
+
+        // =========================
+        // RESET DISTANCE STATE
         // =========================
         this.measurePoints = [];
 
@@ -635,4 +767,5 @@ window.GISAnalysis = {
             "Analysis cleared"
         );
     }
+    
 };

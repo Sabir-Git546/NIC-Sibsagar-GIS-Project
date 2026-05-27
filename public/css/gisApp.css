@@ -154,3 +154,73 @@
 .spatial-analysis-card .btn:hover {
     transform: translateY(-1px);
 }
+
+/* =========================
+   GIS MODAL POPUP
+========================= */
+
+.gis-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 99999;
+}
+
+/* dark background */
+.gis-modal-backdrop {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+}
+
+/* popup window */
+.gis-modal-window {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 420px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    overflow: hidden;
+    animation: popIn 0.2s ease-in-out;
+}
+
+/* header */
+.gis-modal-header {
+    padding: 12px;
+    background: #2c3e50;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* body */
+.gis-modal-body {
+    padding: 15px;
+}
+
+/* footer */
+.gis-modal-footer {
+    padding: 10px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* animation */
+@keyframes popIn {
+    from {
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 0;
+    }
+    to {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+}

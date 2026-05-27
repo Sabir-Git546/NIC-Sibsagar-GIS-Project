@@ -121,6 +121,12 @@ class ProjectGisController extends Controller
                     ? $feature['properties']
                     : [];
 
+                // =========================
+                // ADD PROJECT CONTEXT
+                // =========================
+                $attributes['projectid'] = $projectid;
+                $attributes['layername'] = $request->layername;
+
                 // INSERT INTO POSTGIS
                 DB::insert(
 
@@ -274,6 +280,158 @@ class ProjectGisController extends Controller
                 'success',
                 'GIS upload request sent for approval'
             );
+    }
+
+
+    // =========================
+    // STORE BUFFERED GIS LAYER
+    // =========================
+    public function storeLayer(
+        Request $request,
+        $projectid
+    ) {
+
+        try {
+
+            // =========================
+            // VALIDATION
+            // =========================
+            $request->validate([
+
+                'layername' =>
+                    'required|string|max:200',
+
+                'geojson' =>
+                    'required|array'
+
+            ]);
+
+            $geojson =
+                $request->geojson;
+
+            // =========================
+            // FEATURE COLLECTION
+            // =========================
+            $features =
+                $geojson['features'] ?? [];
+
+            if (empty($features)) {
+
+                return response()->json([
+
+                    'success' => false,
+
+                    'message' =>
+                        'No features found'
+
+                ], 422);
+            }
+
+            // =========================
+            // INSERT FEATURES
+            // =========================
+            foreach ($features as $feature) {
+
+                $geometry = json_encode(
+                    $feature['geometry']
+                );
+
+                $attributes =
+                    $feature['properties'] ?? [];
+
+                DB::insert(
+
+                    "
+                    INSERT INTO project_gis_data
+                    (
+                        projectid,
+                        layername,
+                        geometry,
+                        attributes
+                    )
+
+                    VALUES
+                    (
+                        ?,
+                        ?,
+                        ST_SetSRID(
+                            ST_GeomFromGeoJSON(?),
+                            4326
+                        ),
+                        ?
+                    )
+                    ",
+
+                    [
+
+                        $projectid,
+
+                        sanitize_input(
+                            $request->layername
+                        ),
+
+                        $geometry,
+
+                        json_encode(
+                            $attributes
+                        )
+
+                    ]
+                );
+            }
+
+            // =========================
+            // AUDIT LOG
+            // =========================
+            AuditService::log(
+
+                'CREATE',
+
+                'GIS',
+
+                'Buffered GIS layer saved: ' .
+                $request->layername,
+
+                null,
+
+                [
+
+                    'projectid' =>
+                        $projectid,
+
+                    'layername' =>
+                        $request->layername
+
+                ]
+            );
+
+            return response()->json([
+
+                'success' => true,
+
+                'message' =>
+                    'Layer saved successfully'
+
+            ]);
+
+        } catch (\Exception $e) {
+
+            \Log::error(
+                'GIS Layer Save Error',
+                [
+                    'message' =>
+                        $e->getMessage()
+                ]
+            );
+
+            return response()->json([
+
+                'success' => false,
+
+                'message' => 'Server Error'
+
+            ], 500);
+        }
     }
 
     // =========================
