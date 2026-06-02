@@ -465,11 +465,25 @@ startBufferAnalysis() {
             // =========================
             // STORE BUFFER DATA
             // =========================
+           const originalFeature = layer.toGeoJSON();
+
+            originalFeature.properties = {
+                ...(originalFeature.properties || {}),
+                feature_type: "source"
+            };
+
+            buffered.properties = {
+                ...(buffered.properties || {}),
+                feature_type: "buffer",
+                buffer_distance: distance
+            };
+
             GISAnalysis.currentBufferedGeoJSON = {
-
                 type: "FeatureCollection",
-
-                features: [buffered]
+                features: [
+                    originalFeature,
+                    buffered
+                ]
             };
 
             GISAnalysis.currentBufferDistance =
@@ -592,12 +606,86 @@ startBufferAnalysis() {
         console.log("Saving buffer layer...");
 
         // =========================
-        // VALIDATE BUFFER
+        // COLLECT ALL VISIBLE FEATURES
         // =========================
-        if (!this.currentBufferedGeoJSON) {
-            alert("No buffer available");
+        const allFeatures = [];
+
+        // =========================
+        // ORIGINAL GIS LAYERS
+        // =========================
+        Object.values(GIS.layers).forEach(layerGroup => {
+
+            if (!layerGroup || !layerGroup.eachLayer) return;
+
+            layerGroup.eachLayer(layer => {
+
+                const geojson = layer.toGeoJSON();
+
+                if (geojson.type === "FeatureCollection") {
+
+                    allFeatures.push(
+                        ...geojson.features
+                    );
+
+                } else {
+
+                    allFeatures.push(
+                        geojson
+                    );
+                }
+            });
+        });
+
+        // =========================
+        // BUFFER LAYERS
+        // =========================
+        GISAnalysis.bufferLayers.forEach(bufferLayer => {
+
+            if (!bufferLayer || !bufferLayer.eachLayer) return;
+
+            bufferLayer.eachLayer(layer => {
+
+                const geojson = layer.toGeoJSON();
+
+                if (geojson.type === "FeatureCollection") {
+
+                    allFeatures.push(
+                        ...geojson.features
+                    );
+
+                } else {
+
+                    allFeatures.push(
+                        geojson
+                    );
+                }
+            });
+        });
+
+        // =========================
+        // VALIDATE
+        // =========================
+        if (allFeatures.length === 0) {
+
+            alert("No GIS features available");
+
             return;
         }
+
+        // =========================
+        // FINAL FEATURE COLLECTION
+        // =========================
+        const geojsonToSave = {
+
+            type: "FeatureCollection",
+
+            features: allFeatures
+        };
+
+        console.log(
+            "Saving Features:",
+            geojsonToSave.features.length
+        );
 
         const layerName = document.getElementById("newLayerName").value.trim();
         const description = document.getElementById("layerDescription")?.value.trim();
@@ -630,13 +718,11 @@ startBufferAnalysis() {
 
                     layername: layerName,
 
-                    geojson: this.currentBufferedGeoJSON,
+                    geojson: geojsonToSave,
 
-                    layer_type: "buffer",
+                    layer_type: "analysis",
 
-                    bufferdistance: this.currentBufferDistance || 0,
-
-                    //description: description || null
+                    bufferdistance: this.currentBufferDistance || 0
                 })
             });
 
