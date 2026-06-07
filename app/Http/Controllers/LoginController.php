@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Models\PasswordReset;
 
 use Illuminate\Support\Str;
 
@@ -300,6 +301,597 @@ class LoginController extends Controller
         }
     }
 
+    public function showForgotPasswordForm()
+    {
+        try {
+
+            return view('forgot-password');
+
+        } catch (\Exception $e) {
+
+            Log::error('Forgot password page load failed', [
+
+                'message' => $e->getMessage(),
+                'ip' => request()->ip()
+
+            ]);
+
+            return redirect()
+                ->route('login')
+                ->with('error', 'Unable to load page.');
+        }
+    }
+
+    public function sendOtp(Request $request)
+    {
+        try {
+
+            $request->validate([
+
+                'userid' => 'required|string|max:50'
+
+            ]);
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | OTP RATE LIMITING
+            |--------------------------------------------------------------------------
+            */
+            $throttleKey =
+
+                'password-reset|'
+
+                . Str::lower($request->userid)
+
+                . '|'
+
+                . $request->ip();
+
+
+            if (RateLimiter::tooManyAttempts($throttleKey, 3)) {
+
+                $seconds =
+                    RateLimiter::availableIn($throttleKey);
+
+                Log::warning('Too many OTP requests', [
+
+                    'userid' => $request->userid,
+
+                    'ip' => $request->ip()
+
+                ]);
+
+                return back()->with(
+
+                    'error',
+
+                    "Too many OTP requests. Try again in {$seconds} seconds."
+
+                );
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | VERIFY USER EXISTS
+            |--------------------------------------------------------------------------
+            */
+            $user = UserModel::where(
+
+                'userid',
+
+                $request->userid
+
+            )->first();
+
+
+            if (!$user) {
+
+                return back()->with(
+
+                    'error',
+
+                    'User ID not found.'
+
+                );
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | REMOVE OLD OTP RECORDS
+            |--------------------------------------------------------------------------
+            */
+            PasswordReset::where(
+
+                'userid',
+
+                $request->userid
+
+            )->delete();
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | GENERATE OTP
+            |--------------------------------------------------------------------------
+            */
+            $otp = random_int(
+
+                100000,
+
+                999999
+
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | STORE OTP
+            |--------------------------------------------------------------------------
+            */
+            PasswordReset::create([
+
+                'userid' => $request->userid,
+
+                'otp_hash' => Hash::make($otp),
+
+                'expires_at' => now()->addMinutes(5),
+
+                'is_verified' => false
+
+            ]);
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | RECORD OTP REQUEST
+            |--------------------------------------------------------------------------
+            */
+            RateLimiter::hit(
+
+                $throttleKey,
+
+                300 // 5 minutes
+
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | SECURITY LOG
+            |--------------------------------------------------------------------------
+            */
+            Log::info('Password reset OTP generated', [
+
+                'userid' => $request->userid,
+
+                'ip' => $request->ip()
+
+            ]);
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | AUDIT LOG
+            |--------------------------------------------------------------------------
+            */
+            AuditService::log(
+
+                'PASSWORD_RESET_REQUEST',
+
+                'AUTH',
+
+                'Password reset OTP generated',
+
+                null,
+
+                [
+
+                    'userid' => $request->userid,
+
+                    'ip' => $request->ip()
+
+                ]
+
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | DEVELOPMENT OTP DISPLAY
+            |--------------------------------------------------------------------------
+            */
+            return back()
+
+                ->with(
+
+                    'success',
+
+                    "Development OTP: {$otp}"
+
+                )
+
+                ->with(
+
+                    'userid',
+
+                    $request->userid
+
+                );
+
+        } catch (\Exception $e) {
+
+            Log::error('OTP generation failed', [
+
+                'message' => $e->getMessage(),
+
+                'userid' => $request->userid ?? null,
+
+                'ip' => $request->ip()
+
+            ]);
+
+            return back()->with(
+
+                'error',
+
+                'Unable to generate OTP.'
+
+            );
+        }
+    }
+
+    public function verifyOtp(Request $request)
+    {
+        try {
+
+            $request->validate([
+
+                'userid' => 'required|string',
+
+                'otp' => 'required|digits:6'
+
+            ]);
+
+            $reset = PasswordReset::where(
+
+                    'userid',
+
+                    $request->userid
+
+                )
+
+                ->latest('id')
+
+                ->first();
+
+
+            if (!$reset) {
+
+                return back()->with(
+
+                    'error',
+
+                    'OTP not found.'
+
+                );
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | OTP ALREADY USED
+            |--------------------------------------------------------------------------
+            */
+            if ($reset->is_verified) {
+
+                return back()->with(
+
+                    'error',
+
+                    'OTP already verified.'
+
+                );
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | CHECK OTP EXPIRY
+            |--------------------------------------------------------------------------
+            */
+            if (now()->gt($reset->expires_at)) {
+
+                AuditService::log(
+
+                    'PASSWORD_RESET_FAILED',
+
+                    'AUTH',
+
+                    'OTP expired',
+
+                    null,
+
+                    [
+
+                        'userid' => $request->userid,
+
+                        'ip' => $request->ip()
+
+                    ]
+
+                );
+
+                return back()->with(
+
+                    'error',
+
+                    'OTP has expired.'
+
+                );
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | VERIFY OTP
+            |--------------------------------------------------------------------------
+            */
+            if (!Hash::check(
+
+                $request->otp,
+
+                $reset->otp_hash
+
+            )) {
+
+                AuditService::log(
+
+                    'PASSWORD_RESET_FAILED',
+
+                    'AUTH',
+
+                    'Invalid OTP entered',
+
+                    null,
+
+                    [
+
+                        'userid' => $request->userid,
+
+                        'ip' => $request->ip()
+
+                    ]
+
+                );
+
+                return back()->with(
+
+                    'error',
+
+                    'Invalid OTP.'
+
+                );
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | MARK OTP AS VERIFIED
+            |--------------------------------------------------------------------------
+            */
+            $reset->is_verified = true;
+
+            $reset->save();
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | SECURITY LOG
+            |--------------------------------------------------------------------------
+            */
+            Log::info('Password reset OTP verified', [
+
+                'userid' => $request->userid,
+
+                'ip' => $request->ip()
+
+            ]);
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | AUDIT LOG
+            |--------------------------------------------------------------------------
+            */
+            AuditService::log(
+
+                'PASSWORD_RESET_OTP_VERIFIED',
+
+                'AUTH',
+
+                'OTP verified successfully',
+
+                null,
+
+                [
+
+                    'userid' => $request->userid,
+
+                    'ip' => $request->ip()
+
+                ]
+
+            );
+
+
+            return back()
+
+                ->with(
+
+                    'otp_verified',
+
+                    true
+
+                )
+
+                ->with(
+
+                    'userid',
+
+                    $request->userid
+
+                )
+
+                ->with(
+
+                    'success',
+
+                    'OTP verified successfully.'
+
+                );
+
+        } catch (\Exception $e) {
+
+            Log::error('OTP verification failed', [
+
+                'message' => $e->getMessage(),
+
+                'userid' => $request->userid ?? null,
+
+                'ip' => $request->ip()
+
+            ]);
+
+            return back()->with(
+
+                'error',
+
+                'OTP verification failed.'
+
+            );
+        }
+    }
+
+    public function resetPassword(Request $request)
+    {
+        try {
+
+            $request->validate([
+
+                'userid' => 'required|string',
+
+                'password' => 'required|string|min:6|confirmed'
+
+            ]);
+
+            $reset = PasswordReset::where(
+                    'userid',
+                    $request->userid
+                )
+                ->latest('id')
+                ->first();
+
+            if (!$reset) {
+
+                return redirect()
+                    ->route('password.forgot')
+                    ->with(
+                        'error',
+                        'Password reset session not found.'
+                    );
+            }
+
+            if (!$reset->is_verified) {
+
+                return redirect()
+                    ->route('password.forgot')
+                    ->with(
+                        'error',
+                        'OTP verification required.'
+                    );
+            }
+
+            $user = UserModel::where(
+                'userid',
+                $request->userid
+            )->first();
+
+            if (!$user) {
+
+                return redirect()
+                    ->route('password.forgot')
+                    ->with(
+                        'error',
+                        'User not found.'
+                    );
+            }
+
+            $user->password =
+                Hash::make($request->password);
+
+            $user->save();
+
+            // Remove OTP record
+            $reset->delete();
+
+            Log::info('Password reset successful', [
+
+                'userid' => $user->userid,
+
+                'ip' => $request->ip()
+
+            ]);
+
+            AuditService::log(
+
+                'PASSWORD_RESET_SUCCESS',
+
+                'AUTH',
+
+                'Password reset successful',
+
+                null,
+
+                [
+
+                    'userid' => $user->userid,
+
+                    'ip' => $request->ip()
+
+                ]
+
+            );
+
+            return redirect()
+                ->route('login')
+                ->with(
+                    'success',
+                    'Password reset successful. Please login.'
+                );
+
+        } catch (\Exception $e) {
+
+            Log::error('Password reset failed', [
+
+                'message' => $e->getMessage(),
+
+                'userid' => $request->userid,
+
+                'ip' => $request->ip()
+
+            ]);
+
+            return redirect()
+                ->route('password.forgot')
+                ->with(
+                    'error',
+                    'Password reset failed.'
+                );
+        }
+    }
 
     // logout user
     public function logout(Request $request)

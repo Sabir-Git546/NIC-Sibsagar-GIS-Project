@@ -36,6 +36,25 @@ Route::get('/login', [LoginController::class, 'showLoginForm'])
 Route::post('/login', [LoginController::class, 'login'])
     ->name('login.submit');
 
+
+/*
+|--------------------------------------------------------------------------
+| PASSWORD RESET
+|--------------------------------------------------------------------------
+*/
+Route::get('/forgot-password', [LoginController::class, 'showForgotPasswordForm'])
+    ->name('password.forgot');
+
+Route::post('/forgot-password/send-otp', [LoginController::class, 'sendOtp'])
+    ->name('password.sendOtp');
+
+Route::post('/forgot-password/verify-otp', [LoginController::class, 'verifyOtp'])
+    ->name('password.verifyOtp');
+
+Route::post('/forgot-password/reset', [LoginController::class, 'resetPassword'])
+    ->name('password.reset');
+
+
 Route::post('/logout', function (\Illuminate\Http\Request $request) {
 
     Auth::logout();
@@ -191,11 +210,15 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/gis-app', [GisController::class, 'gisApp'])
             ->name('gis.gisApp');
 
+        Route::get('/projects', [GisController::class, 'getProjects']);
+
         Route::get('/layer/{layername}', [GisController::class, 'getLayer'])
             ->name('gis.layer');
 
         Route::post('/save-geojson', [GisController::class, 'saveGeojson'])
             ->name('save-geojson');
+
+            
     });
 
 
@@ -251,6 +274,7 @@ Route::middleware(['auth'])->group(function () {
 
         Route::post('/{projectid}/gis/layers', [ProjectGisController::class, 'storeLayer']) //route to save buffered files
             ->name('gis.layer.store');
+
 
 
         /*

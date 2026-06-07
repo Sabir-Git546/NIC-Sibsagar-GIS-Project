@@ -25,6 +25,10 @@ class UserModel extends Authenticatable
         'roleid'
     ];
 
+    protected $hidden = [
+        'password',
+    ];
+
     // Tell Laravel which column stores hashed password
     public function getAuthPassword()
     {

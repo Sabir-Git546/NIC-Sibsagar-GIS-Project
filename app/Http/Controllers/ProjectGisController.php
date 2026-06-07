@@ -434,21 +434,15 @@ class ProjectGisController extends Controller
         }
     }
 
+
     // =========================
     // DELETE GIS LAYER
     // =========================
-    public function deleteLayer(
-        $projectid,
-        $layername
-    ) {
-
-        // EXISTING GIS DATA
+    public function deleteLayer($projectid, $layername)
+    {
         $gisData = DB::table('project_gis_data')
-
             ->where('projectid', $projectid)
-
             ->where('layername', $layername)
-
             ->get();
 
         // =========================
@@ -457,119 +451,65 @@ class ProjectGisController extends Controller
         if (auth()->user()->roleid == 1) {
 
             DB::table('project_gis_data')
-
                 ->where('projectid', $projectid)
-
                 ->where('layername', $layername)
-
                 ->delete();
 
-            // AUDIT LOG
             AuditService::log(
-
                 'DELETE',
-
                 'GIS',
-
-                'GIS deleted directly by admin: ' .
-                $layername,
-
+                'GIS deleted directly by admin: ' . $layername,
                 $gisData->toArray(),
-
                 null
-
             );
 
-            return redirect()
-
-                ->back()
-
-                ->with(
-                    'success',
-                    'GIS layer deleted successfully'
-                );
+            return response()->json([
+                'success' => true,
+                'message' => 'GIS layer deleted successfully'
+            ]);
         }
 
         // =========================
         // USER APPROVAL FLOW
         // =========================
-
-        // CHECK DUPLICATE PENDING REQUEST
         $pending = DB::table('approval_requests')
-
             ->where('module', 'GIS')
-
             ->where('recordid', $projectid)
-
             ->where('layername', $layername)
-
             ->where('status', 'pending')
-
             ->exists();
 
         if ($pending) {
 
-            return back()->with(
-                'error',
-                'A pending GIS delete request already exists.'
-            );
+            return response()->json([
+                'success' => false,
+                'message' => 'A pending GIS delete request already exists.'
+            ], 400);
         }
 
-        // STORE APPROVAL REQUEST
         DB::table('approval_requests')->insert([
-
-            'userid' =>
-                auth()->user()->userid,
-
-            'module' =>
-                'GIS',
-
-            'action' =>
-                'delete_request',
-
-            'recordid' =>
-                $projectid,
-
-            'old_data' =>
-                json_encode($gisData->toArray()),
-
-            'new_data' =>
-                null,
-
-            'status' =>
-                'pending',
-
-            'layername' =>
-                $layername,
-
-            'created_at' =>
-                now()
-
+            'userid' => auth()->user()->userid,
+            'module' => 'GIS',
+            'action' => 'delete_request',
+            'recordid' => $projectid,
+            'old_data' => json_encode($gisData->toArray()),
+            'new_data' => null,
+            'status' => 'pending',
+            'layername' => $layername,
+            'created_at' => now()
         ]);
 
-        // AUDIT LOG
         AuditService::log(
-
             'DELETE_REQUEST',
-
             'GIS',
-
-            'GIS delete requested: ' .
-            $layername,
-
+            'GIS delete requested: ' . $layername,
             $gisData->toArray(),
-
             null
-
         );
 
-        return redirect()
-
-            ->back()
-
-            ->with(
-                'success',
-                'GIS delete request sent to admin'
-            );
+        return response()->json([
+            'success' => true,
+            'message' => 'GIS delete request sent to admin'
+        ]);
     }
 }

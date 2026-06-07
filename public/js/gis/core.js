@@ -131,9 +131,10 @@ GIS.clearInteractions = function () {
 
     GIS.map.off("dblclick");
 
+    GIS.map.off("contextmenu");
+
     GIS.map.getContainer().style.cursor = "";
 
-    // restore default click
     GIS.map.on("click", () => {
 
         GIS.selectedFeature = null;

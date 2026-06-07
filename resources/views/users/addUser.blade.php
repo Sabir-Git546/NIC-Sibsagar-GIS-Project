@@ -34,7 +34,7 @@
 
             <form id="addUserForm"
                   action="{{ route('user.store') }}"
-                  method="POST">
+                  method="POST" autocomplete="off">
 
                 @csrf
 
@@ -48,12 +48,12 @@
                         </label>
 
                         <input type="text"
-                               name="userid"
-                               value="{{ old('userid') }}"
-                               class="form-control @error('userid') is-invalid @enderror"
+                               name="fval1"
+                               value="{{ old('fval1') }}"
+                               class="form-control @error('fval1') is-invalid @enderror"
                                required>
 
-                        @error('userid')
+                        @error('fval1')
 
                             <div class="invalid-feedback">
                                 {{ $message }}
@@ -72,12 +72,12 @@
                         </label>
 
                         <input type="text"
-                               name="username"
-                               value="{{ old('username') }}"
-                               class="form-control @error('username') is-invalid @enderror"
+                               name="fval2" autocomplete="off"
+                               value="{{ old('fval2') }}"
+                               class="form-control @error('fval2') is-invalid @enderror"
                                required>
 
-                        @error('username')
+                        @error('fval2')
 
                             <div class="invalid-feedback">
                                 {{ $message }}
@@ -120,12 +120,11 @@
                         </label>
 
                         <input type="password"
-                               name="userpass"
-                               class="form-control @error('userpass') is-invalid @enderror"
+                               name="fval3" autocomplete="new-password"
+                               class="form-control @error('fval3') is-invalid @enderror"
                                required>
 
-                        @error('userpass')
-
+                        @error('fval3')
                             <div class="invalid-feedback">
                                 {{ $message }}
                             </div>
@@ -143,11 +142,11 @@
                         </label>
 
                         <input type="password"
-                               name="re_password"
-                               class="form-control @error('re_password') is-invalid @enderror"
+                               name="fval4"
+                               class="form-control @error('fval4') is-invalid @enderror"
                                required>
 
-                        @error('re_password')
+                        @error('fval4')
 
                             <div class="invalid-feedback">
                                 {{ $message }}

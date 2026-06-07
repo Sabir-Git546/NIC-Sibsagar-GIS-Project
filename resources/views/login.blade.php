@@ -227,13 +227,23 @@
 
             </form>
 
+            <div class="text-end mt-4 ">
 
-            <!-- FOOTER -->
+                <a href="{{ route('password.forgot') }}"
+                class="text-decoration-none fs-5">
+
+                    Forgot Password?
+
+                </a>
+
+            </div>
+
+            <!-- FOOTER 
             <div class="text-center mt-4 text-muted small">
 
                 Authorized Access Only
 
-            </div>
+            </div>  -->
 
         </div>
 

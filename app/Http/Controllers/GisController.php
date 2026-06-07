@@ -78,6 +78,8 @@ class GisController extends Controller
 
                 'project_gis_data.layername',
 
+                'project_gis_data.projectid',
+
                 'departments.deptid',
 
                 'departments.deptname'
@@ -103,12 +105,18 @@ class GisController extends Controller
 
             ->get();
 
+        // Projects details
+        $projects = DB::table('projects')
+            ->select('projectid', 'projectname')
+            ->get();
+
 
         return view(
             'GIS.gisApp',
             compact(
                 'layers',
-                'departments'
+                'departments',
+                'projects'
             )
         );
     }

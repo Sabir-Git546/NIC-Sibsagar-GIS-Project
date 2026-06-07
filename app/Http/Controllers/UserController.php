@@ -83,10 +83,10 @@ class UserController extends Controller
         try {
 
             $data = $request->validate([
-                'userid' => 'required|string|max:50|unique:users,userid',
-                'username' => 'required|string|max:100',
-                'userpass' => 'required|string|min:6',
-                're_password' => 'required|same:userpass',
+                'fval1' => 'required|string|max:50|unique:users,userid',
+                'fval2' => 'required|string|max:100',
+                'fval3' => 'required|string|min:8',
+                'fval4' => 'required|same:fval3',
                 'email' => 'required|email|unique:users,email',
                 'deptid' => 'required|exists:departments,deptid',
                 'roleid' => 'required|exists:roles,roleid',
@@ -97,7 +97,7 @@ class UserController extends Controller
             // Duplicate userid prevention
             $useridExists = UserModel::where(
                 'userid',
-                trim($data['userid'])
+                trim($data['fval1'])
             )->exists();
 
             if ($useridExists) {
@@ -127,9 +127,9 @@ class UserController extends Controller
             }
 
             $user = UserModel::create([
-                'userid' => trim($request->userid),
-                'username' => trim($request->username),
-                'password' => Hash::make($request->userpass),
+                'userid' => trim($request->fval1),
+                'username' => trim($request->fval2),
+                'password' => Hash::make($request->fval3),
                 'email' => trim($request->email),
                 'deptid' => $request->deptid,
                 'roleid' => $request->roleid,
@@ -138,7 +138,7 @@ class UserController extends Controller
             AuditService::log(
                 'CREATE',
                 'USER',
-                'User created: ' . $request->userid,
+                'User created: ' . $request->fval1,
                 null,
                 $user->toArray()
             );

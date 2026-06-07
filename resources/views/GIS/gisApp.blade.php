@@ -71,12 +71,29 @@ $hideNavbar = true;
                                 <div id="layerList">
 
                                     @foreach($layers as $layer)
-                                        <div class="layer-item" data-dept="{{ $layer->deptid }}">
-                                            <input type="checkbox"
-                                                   value="{{ $layer->layername }}"
-                                                   onchange="GISLayer.toggle(this)">
-                                            <label>{{ ucfirst($layer->layername) }}</label>
+
+                                        <div class="layer-item d-flex justify-content-between align-items-center mb-2">
+
+                                            <!-- CHECKBOX -->
+                                            <div>
+                                                <input type="checkbox"
+                                                    value="{{ $layer->layername }}"
+                                                    onchange="GISLayer.toggle(this)">
+
+                                                <label>{{ ucfirst($layer->layername) }}</label>
+                                            </div>
+
+                                            <!-- DELETE BUTTON -->
+                                            <button type="button"
+                                                    class="btn btn-sm btn-danger p-1 d-flex align-items-center justify-content-center"
+                                                    style="width:22px; height:22px;"
+                                                    onclick="GISLayer.deleteLayer({{ $layer->projectid }}, @js($layer->layername))">
+
+                                                <i class="bi bi-trash" style="font-size:14px;"></i>
+                                            </button>
+
                                         </div>
+
                                     @endforeach
 
                                 </div>
@@ -115,10 +132,6 @@ $hideNavbar = true;
                                             Buffer Analysis
                                         </option>
 
-                                        <option value="#">
-                                            Create New Layer
-                                        </option>
-
                                     <!--    <option value="overlap">
                                             Overlap Analysis
                                         </option>
@@ -143,9 +156,36 @@ $hideNavbar = true;
                                         Save Layer
                                     </button>
 
-                                    <button class="btn btn-danger w-100"
+                                    <button class="btn btn-danger w-100 mb-2"
                                             onclick="GISAnalysis.clearAnalysis()">
                                         Clear Analysis
+                                    </button>
+
+                                    <button
+                                        id="createLayerBtn"
+                                        class="btn btn-success w-100"
+                                        onclick="GISDrawing.openCreateLayerModal()">
+
+                                        + Create Layer
+
+                                    </button>
+
+                                    <button
+                                        id="finishLineBtn"
+                                        class="btn btn-warning w-100 mt-2 d-none"
+                                        onclick="GISDrawing.finishCurrentLine()">
+
+                                        Finish Line
+
+                                    </button>
+
+                                    <button
+                                        id="saveDrawLayerBtn"
+                                        class="btn btn-primary w-100 mt-2 d-none"
+                                        onclick="GISDrawing.saveDrawnLayer()">
+
+                                        Save Drawn Layer
+
                                     </button>
 
                                 </div>
@@ -266,6 +306,137 @@ $hideNavbar = true;
 
 </div>
 
+<div
+    id="createLayerModal"
+    class="card d-none"
+    style="
+        position:absolute;
+        top:100px;
+        left:50%;
+        transform:translateX(-50%);
+        width:400px;
+        z-index:9999;
+    "
+>
+
+    <div class="card-header">
+
+        Create GIS Layer
+
+    </div>
+
+    <div class="card-body">
+
+        <label>Project</label>
+
+        <select id="drawingProject" class="form-control mb-2">
+            <option value="">Select Project</option>
+
+            @foreach($projects as $project)
+                <option value="{{ $project->projectid }}">
+                    {{ $project->projectname }}
+                </option>
+            @endforeach
+        </select>
+
+        <label>Layer Name</label>
+
+        <input
+            type="text"
+            id="drawingLayerName"
+            class="form-control mb-2">
+
+        <label>Geometry Type</label>
+
+        <select
+            id="drawingGeometryType"
+            class="form-control">
+
+            <option value="Point">
+                Point
+            </option>
+
+            <option value="LineString">
+                Line
+            </option>
+
+            <option value="Polygon">
+                Polygon
+            </option>
+
+        </select>
+
+    </div>
+
+    <div class="card-footer">
+
+        <button
+            class="btn btn-primary"
+            onclick="GISDrawing.createLayer()">
+
+            Create
+
+        </button>
+
+        <button
+            class="btn btn-secondary"
+            onclick="GISDrawing.closeCreateLayerModal()">
+
+            Close
+
+        </button>
+
+    </div>
+
+</div>
+
+<div id="attributeModal" class="gis-modal d-none">
+
+    <div class="gis-modal-backdrop"></div>
+
+    <div class="gis-modal-window">
+
+        <div class="gis-modal-header">
+            <h5>Point Attributes</h5>
+        </div>
+
+        <div class="gis-modal-body">
+
+            <input
+                type="text"
+                id="attrName"
+                class="form-control mb-2"
+                placeholder="Name">
+
+            <input
+                type="text"
+                id="attrType"
+                class="form-control mb-2"
+                placeholder="Type">
+
+            <textarea
+                id="attrDescription"
+                class="form-control"
+                placeholder="Description"></textarea>
+
+        </div>
+
+        <div class="gis-modal-footer">
+
+            <button
+                class="btn btn-primary"
+                onclick="GISDrawing.savePointAttributes()">
+
+                Save Point
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
 <!-- ================= LIBS ================= -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
@@ -279,6 +450,7 @@ $hideNavbar = true;
 <script src="{{ asset('js/gis/analysis.js') }}"></script>
 <script src="{{ asset('js/gis/tools.js') }}"></script>
 <script src="{{ asset('js/gis/ui.js') }}"></script>
+<script src="{{ asset('js/gis/drawing.js') }}"></script>
 
 
 
