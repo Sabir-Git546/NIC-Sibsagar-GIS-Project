@@ -10,7 +10,15 @@ window.GIS = {
     // =========================
     layers: {},
 
+    csvGeoJson: null,
+
     csvLayers: [],
+
+    kmlLayers: [],
+
+    kmlGeoJson: null,
+
+    kmlPreviousView: null,
 
     // =========================
     // FEATURE STATE

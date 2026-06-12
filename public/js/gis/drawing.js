@@ -4,6 +4,8 @@ window.GISDrawing = {
 
     drawnFeatures: [],
 
+    pendingFeature: null,
+
     drawnLayers: [],
 
     pendingLatLng: null,
@@ -11,6 +13,10 @@ window.GISDrawing = {
     linePoints: [],
 
     tempLine: null,
+
+    polygonPoints: [],
+
+    tempPolygon: null,
 
     completedLineCount: 0,
 
@@ -161,7 +167,7 @@ window.GISDrawing = {
                 "d-none"
             );
 
-        if (geometryType === "LineString") {
+        if (geometryType === "LineString" || geometryType === "Polygon") {
 
             document
                 .getElementById(
@@ -174,9 +180,24 @@ window.GISDrawing = {
 
         this.closeCreateLayerModal();
 
-        alert(
-            "Click on map to add points"
-        );
+        if (geometryType === "Point") {
+
+            alert(
+                "Click map to add points"
+            );
+        }
+        else if (geometryType === "LineString") {
+
+            alert(
+                "Click map to add vertices. Press Finish Drawing when completed."
+            );
+        }
+        else if (geometryType === "Polygon") {
+
+            alert(
+                "Click map to add vertices. Press Finish Drawing when completed."
+            );
+        }
     },
 
     startDrawing() {
@@ -209,18 +230,21 @@ window.GISDrawing = {
                 this.handleLineClick
             );
 
+        }
+        else if (type === "Polygon") {
+
             GIS.map.on(
-                "dblclick",
-                function(e) {
-
-                    console.log(
-                        "MAP DBLCLICK EVENT"
-                    );
-
-                    GISDrawing.finishCurrentLine(e);
-                }
+                "click",
+                this.handlePolygonClick
             );
 
+            document
+                .getElementById(
+                    "finishLineBtn"
+                )
+                .classList.remove(
+                    "d-none"
+                );
         }
         else {
 
@@ -276,6 +300,17 @@ window.GISDrawing = {
         this.linePoints = [];
 
         this.tempLine = null;
+
+        if (this.tempPolygon) {
+
+            GIS.map.removeLayer(
+                this.tempPolygon
+            );
+        }
+
+        this.polygonPoints = [];
+
+        this.tempPolygon = null;
 
         this.completedLineCount = 0;
 
@@ -350,6 +385,35 @@ window.GISDrawing = {
         ).addTo(GIS.map);
     },
 
+    handlePolygonClick(e) {
+
+        const latlng = e.latlng;
+
+        GISDrawing.polygonPoints.push([
+            latlng.lat,
+            latlng.lng
+        ]);
+
+        if (GISDrawing.tempPolygon) {
+
+            GIS.map.removeLayer(
+                GISDrawing.tempPolygon
+            );
+        }
+
+        GISDrawing.tempPolygon = L.polygon(
+
+            GISDrawing.polygonPoints,
+
+            {
+                color: "blue",
+                weight: 3,
+                fillOpacity: 0.3
+            }
+
+        ).addTo(GIS.map);
+    },
+
     handlePointClick(e) {
 
         if (
@@ -359,7 +423,24 @@ window.GISDrawing = {
             return;
         }
 
-        GISDrawing.pendingLatLng = e.latlng;
+        const latlng = e.latlng;
+
+        GISDrawing.pendingFeature = {
+
+            type: "Feature",
+
+            geometry: {
+
+                type: "Point",
+
+                coordinates: [
+                    latlng.lng,
+                    latlng.lat
+                ]
+            },
+
+            properties: {}
+        };
 
         document
             .getElementById(
@@ -417,9 +498,16 @@ window.GISDrawing = {
             }
         };
 
-        GISDrawing.drawnFeatures.push(
-            feature
-        );
+        GISDrawing.pendingFeature =
+            feature;
+
+        document
+            .getElementById(
+                "attributeModal"
+            )
+            .classList.remove(
+                "d-none"
+            );
 
         GISDrawing.drawnLayers.push(
             GISDrawing.tempLine
@@ -441,12 +529,104 @@ window.GISDrawing = {
         );
     },
 
-    savePointAttributes() {
+    finishCurrentPolygon() {
 
-        const latlng =
-            this.pendingLatLng;
+        if (
+            GISDrawing.polygonPoints.length < 3
+        ) {
 
-        if (!latlng) return;
+            alert(
+                "Polygon requires at least 3 vertices"
+            );
+
+            return;
+        }
+
+        const coordinates =
+            GISDrawing.polygonPoints.map(
+                point => [
+                    point[1],
+                    point[0]
+                ]
+            );
+
+        coordinates.push(
+            coordinates[0]
+        );
+
+        const feature = {
+
+            type: "Feature",
+
+            geometry: {
+
+                type: "Polygon",
+
+                coordinates: [
+                    coordinates
+                ]
+            },
+
+            properties: {
+
+                name:
+                    GISDrawing.currentLayerName
+            }
+        };
+
+        GISDrawing.pendingFeature =
+            feature;
+
+        document
+            .getElementById(
+                "attributeModal"
+            )
+            .classList.remove(
+                "d-none"
+            );
+
+        GISDrawing.drawnLayers.push(
+            GISDrawing.tempPolygon
+        );
+
+        GISDrawing.polygonPoints = [];
+
+        GISDrawing.tempPolygon = null;
+
+        alert(
+            "Polygon completed. Click Save Drawn Layer."
+        );
+    },
+
+
+    finishDrawing() {
+
+        if (
+            this.currentGeometryType ===
+            "LineString"
+        ) {
+
+            this.finishCurrentLine();
+        }
+        else if (
+            this.currentGeometryType ===
+            "Polygon"
+        ) {
+
+            this.finishCurrentPolygon();
+        }
+    },
+
+   saveFeatureAttributes() {
+
+        if (!this.pendingFeature) {
+
+            alert(
+                "No feature available"
+            );
+
+            return;
+        }
 
         const name =
             document
@@ -469,42 +649,51 @@ window.GISDrawing = {
                 )
                 .value;
 
-        const marker = L.marker(latlng)
+        this.pendingFeature.properties = {
+
+            name,
+
+            type,
+
+            description
+        };
+
+        // POINT MARKER DISPLAY
+        if (
+            this.pendingFeature.geometry.type
+            === "Point"
+        ) {
+
+            const coordinates =
+                this.pendingFeature.geometry.coordinates;
+
+            const marker = L.marker([
+
+                coordinates[1],
+                coordinates[0]
+
+            ])
 
             .addTo(GIS.map)
 
             .bindPopup(`
+
                 <b>${name}</b><br>
+
                 ${type}
+
             `);
 
-        this.drawnLayers.push(
-            marker
+            this.drawnLayers.push(
+                marker
+            );
+        }
+
+        this.drawnFeatures.push(
+            this.pendingFeature
         );
 
-        this.drawnFeatures.push({
-
-            type: "Feature",
-
-            geometry: {
-
-                type: "Point",
-
-                coordinates: [
-                    latlng.lng,
-                    latlng.lat
-                ]
-            },
-
-            properties: {
-
-                name,
-
-                type,
-
-                description
-            }
-        });
+        this.pendingFeature = null;
 
         document
             .getElementById(
@@ -531,8 +720,6 @@ window.GISDrawing = {
             .classList.add(
                 "d-none"
             );
-
-        this.pendingLatLng = null;
 
         console.log(
             "Feature Added",
@@ -635,6 +822,17 @@ window.GISDrawing = {
                 this.linePoints = [];
 
                 this.tempLine = null;
+
+                if (this.tempPolygon) {
+
+                    GIS.map.removeLayer(
+                        this.tempPolygon
+                    );
+                }
+
+                this.polygonPoints = [];
+
+                this.tempPolygon = null;
 
                 this.completedLineCount = 0;
 

@@ -1,29 +1,18 @@
+@php
+    $hideNavbar = true;
+@endphp
+
 @extends('layouts.master')
 
+@section('styles')
+
+<link rel="stylesheet"
+      href="{{ asset('css/otpGeneration.css') }}">
+
+@endsection
+
 @section('content')
-<style>
-.password-wrapper {
-    position: relative;
-}
 
-.password-wrapper .form-control {
-    padding-right: 45px;
-}
-
-.toggle-password {
-    position: absolute;
-    top: 50%;
-    right: 12px;
-    transform: translateY(-50%);
-    cursor: pointer;
-    color: #6c757d;
-    z-index: 10;
-}
-
-.toggle-password:hover {
-    color: #000;
-}
-</style>
 <div class="container mt-5">
 
     <div class="row justify-content-center">
@@ -39,6 +28,12 @@
                     </h4>
 
                 </div>
+
+                <!--    <div class="alert alert-info">
+                            auth_step = {{ session('auth_step') }}
+                            <br>
+                            auth_user = {{ session('auth_user') }}
+                        </div>  -->
 
                 <div class="card-body">
 
@@ -102,24 +97,23 @@
 
 
                     {{-- STEP 1 : GENERATE OTP --}}
+                   @if(!session('auth_step'))
+
                     <form method="POST"
-                          action="{{ route('password.sendOtp') }}">
+                        action="{{ route('password.sendOtp') }}">
 
                         @csrf
 
                         <div class="mb-3">
 
                             <label class="form-label">
-
                                 User ID
-
                             </label>
 
                             <input type="text"
-                                   name="userid"
-                                   class="form-control"
-                                   value="{{ session('userid') }}"
-                                   required>
+                                name="userid"
+                                class="form-control"
+                                required>
 
                         </div>
 
@@ -132,9 +126,10 @@
 
                     </form>
 
+                    @endif
 
                     {{-- STEP 2 : VERIFY OTP --}}
-                    @if(session('userid'))
+                    @if(session('auth_step') === 'reset_otp')
 
                         <hr>
 
@@ -151,7 +146,7 @@
 
                             <input type="hidden"
                                    name="userid"
-                                   value="{{ session('userid') }}">
+                                   value="{{ session('auth_user') }}">
 
                             <div class="mb-3">
 
@@ -169,12 +164,31 @@
 
                             </div>
 
-                            <button type="submit"
-                                    class="btn btn-success">
+                            <div class="row">
 
-                                Verify OTP
+                                <div class="col-6">
 
-                            </button>
+                                    <a href="{{ route('password.cancel') }}"
+                                    class="btn btn-secondary w-100">
+
+                                        Cancel
+
+                                    </a>
+
+                                </div>
+
+                                <div class="col-6">
+
+                                    <button type="submit"
+                                            class="btn btn-success w-100">
+
+                                        Verify OTP
+
+                                    </button>
+
+                                </div>
+
+                            </div>
 
                         </form>
 
@@ -182,7 +196,7 @@
 
 
                     {{-- STEP 3 : RESET PASSWORD --}}
-                    @if(session('otp_verified'))
+                    @if(session('auth_step') === 'reset_password')
 
                         <hr>
 
@@ -199,7 +213,7 @@
 
                             <input type="hidden"
                                    name="userid"
-                                   value="{{ session('userid') }}">
+                                   value="{{ session('auth_user') }}">
 
                             <div class="mb-3">
 

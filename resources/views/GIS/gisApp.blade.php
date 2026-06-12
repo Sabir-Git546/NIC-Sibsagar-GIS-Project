@@ -25,7 +25,7 @@ $hideNavbar = true;
             <a href="{{ route('dashboard') }}"
             class="btn btn-success d-flex align-items-center gap-2 mb-4 shadow-sm rounded-pill px-3 py-2">
 
-                <i class="fas fa-arrow-left"></i>
+                <i class="bi bi-arrow-left"></i>
 
                 <span><b>Dashboard</b></span>
 
@@ -83,14 +83,57 @@ $hideNavbar = true;
                                                 <label>{{ ucfirst($layer->layername) }}</label>
                                             </div>
 
-                                            <!-- DELETE BUTTON -->
-                                            <button type="button"
-                                                    class="btn btn-sm btn-danger p-1 d-flex align-items-center justify-content-center"
-                                                    style="width:22px; height:22px;"
-                                                    onclick="GISLayer.deleteLayer({{ $layer->projectid }}, @js($layer->layername))">
+                                            <!-- LAYERS -->
+                                            <div class="d-flex gap-1">
 
-                                                <i class="bi bi-trash" style="font-size:14px;"></i>
-                                            </button>
+                                                <!-- EXPORT DROPDOWN -->
+                                                <div class="dropdown">
+
+                                                    <button type="button"
+                                                            class="btn btn-sm btn-secondary p-1 d-flex align-items-center justify-content-center"
+                                                            style="width:22px; height:22px;"
+                                                            data-bs-toggle="dropdown">
+
+                                                        <i class="bi bi-download" style="font-size:12px;"></i>
+
+                                                    </button>
+
+                                                    <ul class="dropdown-menu">
+
+                                                        <li>
+                                                            <a class="dropdown-item"
+                                                            href="/gis/export/kml/{{ $layer->projectid }}/{{ rawurlencode($layer->layername) }}">
+
+                                                                Export KML
+
+                                                            </a>
+                                                        </li>
+
+                                                        <li>
+                                                            <a class="dropdown-item"
+                                                            href="/gis/export/shapefile/{{ $layer->projectid }}/{{ rawurlencode($layer->layername) }}">
+
+                                                                Export Shapefile (.zip)
+
+                                                            </a>
+                                                        </li>
+
+                                                    </ul>
+
+
+                                                </div>
+
+                                                <!-- DELETE BUTTON -->
+                                                <button type="button"
+                                                        class="btn btn-sm btn-danger p-1 d-flex align-items-center justify-content-center"
+                                                        style="width:22px; height:22px;"
+                                                        onclick="GISLayer.deleteLayer({{ $layer->projectid }}, @js($layer->layername))">
+
+                                                    <i class="bi bi-trash" style="font-size:14px;"></i>
+
+                                                </button>
+
+                                            </div>
 
                                         </div>
 
@@ -146,7 +189,7 @@ $hideNavbar = true;
 
                                     </select>   
 
-                                    <button class="btn btn-primary w-100 mb-2"
+                                    <button class="btn btn-success w-100 mb-2"
                                             onclick="GISAnalysis.startSelectedAnalysis()">
                                         Run Analysis
                                     </button>
@@ -163,7 +206,7 @@ $hideNavbar = true;
 
                                     <button
                                         id="createLayerBtn"
-                                        class="btn btn-success w-100"
+                                        class="btn btn-primary w-100"
                                         onclick="GISDrawing.openCreateLayerModal()">
 
                                         + Create Layer
@@ -173,15 +216,15 @@ $hideNavbar = true;
                                     <button
                                         id="finishLineBtn"
                                         class="btn btn-warning w-100 mt-2 d-none"
-                                        onclick="GISDrawing.finishCurrentLine()">
+                                        onclick="GISDrawing.finishDrawing()">
 
-                                        Finish Line
+                                        Finish Drawing
 
                                     </button>
 
                                     <button
                                         id="saveDrawLayerBtn"
-                                        class="btn btn-primary w-100 mt-2 d-none"
+                                        class="btn btn-success w-100 mt-2 d-none"
                                         onclick="GISDrawing.saveDrawnLayer()">
 
                                         Save Drawn Layer
@@ -211,40 +254,285 @@ $hideNavbar = true;
                                     Load CSV
                                 </button>
 
-                                <button class="btn btn-danger w-100"
+                                <button class="btn btn-danger w-100 mb-2"
                                         onclick="GISTools.clearCSV()">
                                     Clear CSV
                                 </button>
 
-                            </div>
-                        </div>
-                    </div>
+                                <button class="btn btn-primary w-100 mb-2"
+                                        onclick="GISTools.openCSVLayerModal()">
 
-                    <!-- ================= FILE CONVERTER ================= -->
-                    <div class="accordion-item">
-                        <button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#convert">
-                            File Converter
-                        </button>
+                                    Save CSV as Layer
 
-                        <div id="convert" class="accordion-collapse collapse">
-
-                            <div class="accordion-body">
-
-                                <input type="file" id="zipFile" class="form-control mb-2">
-
-                                <input type="text"
-                                       id="geojsonName"
-                                       class="form-control mb-2"
-                                       placeholder="GeoJSON name">
-
-                                <button class="btn btn-primary w-100"
-                                        onclick="GISTools.convertShp()">
-                                    Convert File
                                 </button>
 
                             </div>
                         </div>
                     </div>
+
+                    <!-- ================= CSV SAVE MODAL ================= -->
+                    <div class="modal fade"
+                        id="csvLayerModal"
+                        tabindex="-1">
+
+                        <div class="modal-dialog">
+
+                            <div class="modal-content">
+
+                                <div class="modal-header">
+
+                                    <h5 class="modal-title">
+                                        Save CSV as GIS Layer
+                                    </h5>
+
+                                    <button type="button"
+                                            class="btn-close"
+                                            data-bs-dismiss="modal">
+                                    </button>
+
+                                </div>
+
+                                <div class="modal-body">
+
+                                    <!-- PROJECT -->
+                                    <div class="mb-3">
+
+                                        <label class="form-label">
+                                            Project
+                                        </label>
+
+                                        <select id="csvProjectId"
+                                                class="form-select">
+
+                                            <option value="">
+                                                Select Project
+                                            </option>
+
+                                            @foreach($projects as $project)
+
+                                                <option value="{{ $project->projectid }}">
+                                                    {{ $project->projectname }}
+                                                </option>
+
+                                            @endforeach
+
+                                        </select>
+
+                                    </div>
+
+                                    <!-- LAYER NAME -->
+                                    <div class="mb-3">
+
+                                        <label class="form-label">
+                                            Layer Name
+                                        </label>
+
+                                        <input type="text"
+                                            id="csvLayerName"
+                                            class="form-control">
+
+                                    </div>
+
+                                </div>
+
+                                <div class="modal-footer">
+
+                                    <button type="button"
+                                            class="btn btn-secondary"
+                                            data-bs-dismiss="modal">
+
+                                        Cancel
+
+                                    </button>
+
+                                    <button type="button"
+                                            class="btn btn-success"
+                                            onclick="GISTools.saveCSVLayer()">
+
+                                        Create Layer
+
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ================= KML VIEWER ================= -->
+
+                    <div class="accordion-item">
+
+                        <button
+                            class="accordion-button collapsed"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#kml">
+
+                            KML Viewer
+
+                        </button>
+
+                        <div
+                            id="kml"
+                            class="accordion-collapse collapse">
+
+                            <div class="accordion-body">
+
+                                <input
+                                    type="file"
+                                    id="kmlFile"
+                                    class="form-control mb-2"
+                                    accept=".kml">
+
+                                <button
+                                    class="btn btn-success w-100 mb-2"
+                                    onclick="GISTools.loadKML()">
+
+                                    Load KML
+
+                                </button>
+
+                                <button
+                                    class="btn btn-danger w-100 mb-2"
+                                    onclick="GISTools.clearKML()">
+
+                                    Clear KML
+
+                                </button>
+
+                                <button
+                                    class="btn btn-primary w-100"
+                                    onclick="GISTools.openKMLLayerModal()">
+
+                                    Save KML as Layer
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- ================= CSV SAVE MODAL ================= -->
+                    <div class="modal fade"
+                        id="kmlLayerModal"
+                        tabindex="-1">
+
+                        <div class="modal-dialog">
+
+                            <div class="modal-content">
+
+                                <div class="modal-header">
+
+                                    <h5 class="modal-title">
+                                        Save kml as GIS Layer
+                                    </h5>
+
+                                    <button type="button"
+                                            class="btn-close"
+                                            data-bs-dismiss="modal">
+                                    </button>
+
+                                </div>
+
+                                <div class="modal-body">
+
+                                    <!-- PROJECT -->
+                                    <div class="mb-3">
+
+                                        <label class="form-label">
+                                            Project
+                                        </label>
+
+                                        <select id="kmlProjectId"
+                                                class="form-select">
+
+                                            <option value="">
+                                                Select Project
+                                            </option>
+
+                                            @foreach($projects as $project)
+
+                                                <option value="{{ $project->projectid }}">
+                                                    {{ $project->projectname }}
+                                                </option>
+
+                                            @endforeach
+
+                                        </select>
+
+                                    </div>
+
+                                    <!-- LAYER NAME -->
+                                    <div class="mb-3">
+
+                                        <label class="form-label">
+                                            Layer Name
+                                        </label>
+
+                                        <input type="text"
+                                            id="kmlLayerName"
+                                            class="form-control">
+
+                                    </div>
+
+                                </div>
+
+                                <div class="modal-footer">
+
+                                    <button type="button"
+                                            class="btn btn-secondary"
+                                            data-bs-dismiss="modal">
+
+                                        Cancel
+
+                                    </button>
+
+                                    <button type="button"
+                                            class="btn btn-success"
+                                            onclick="GISTools.saveKMLLayer()">
+
+                                        Create Layer
+
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- ================= FILE CONVERTER ================= -->
+  <!--                  <div class="accordion-item">
+                            <button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#convert">
+                                File Converter
+                            </button>
+
+                            <div id="convert" class="accordion-collapse collapse">
+
+                                <div class="accordion-body">
+
+                                    <input type="file" id="zipFile" class="form-control mb-2">
+
+                                    <input type="text"
+                                        id="geojsonName"
+                                        class="form-control mb-2"
+                                        placeholder="GeoJSON name">
+
+                                    <button class="btn btn-primary w-100"
+                                            onclick="GISTools.convertShp()">
+                                        Convert File
+                                    </button>
+
+                                </div>
+                            </div>
+                    </div>                          -->
 
                 </div>
             </div>
@@ -397,7 +685,7 @@ $hideNavbar = true;
     <div class="gis-modal-window">
 
         <div class="gis-modal-header">
-            <h5>Point Attributes</h5>
+            <h5>Feature Attributes</h5>
         </div>
 
         <div class="gis-modal-body">
@@ -425,9 +713,9 @@ $hideNavbar = true;
 
             <button
                 class="btn btn-primary"
-                onclick="GISDrawing.savePointAttributes()">
+                onclick="GISDrawing.saveFeatureAttributes()">
 
-                Save Point
+                Save Attributes
 
             </button>
 
@@ -442,6 +730,7 @@ $hideNavbar = true;
 <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://unpkg.com/shpjs@latest/dist/shp.min.js"></script>
+<script src="https://unpkg.com/@tmcw/togeojson@5.8.1/dist/togeojson.umd.js"></script>
 
 <!-- ================= GIS ENGINE ================= -->
 <script src="{{ asset('js/gis/utils.js') }}"></script>

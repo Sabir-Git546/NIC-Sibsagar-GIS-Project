@@ -36,7 +36,15 @@ Route::get('/login', [LoginController::class, 'showLoginForm'])
 Route::post('/login', [LoginController::class, 'login'])
     ->name('login.submit');
 
+/*
+|--------------------------------------------------------------------------
+|OTP VERIFICATION ROUTES
+|--------------------------------------------------------------------------
+ */
 
+ Route::post('/login/verify-otp', [LoginController::class, 'loginVerifyOtp'])
+     ->name('login.verifyOtp');
+     
 /*
 |--------------------------------------------------------------------------
 | PASSWORD RESET
@@ -54,6 +62,15 @@ Route::post('/forgot-password/verify-otp', [LoginController::class, 'verifyOtp']
 Route::post('/forgot-password/reset', [LoginController::class, 'resetPassword'])
     ->name('password.reset');
 
+Route::get(
+    '/login/cancel',
+    [LoginController::class, 'cancelLogin']
+)->name('login.cancel');
+
+Route::get(
+    '/forgot-password/cancel',
+    [LoginController::class, 'cancelForgotPassword']
+)->name('password.cancel');
 
 Route::post('/logout', function (\Illuminate\Http\Request $request) {
 
@@ -218,7 +235,12 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/save-geojson', [GisController::class, 'saveGeojson'])
             ->name('save-geojson');
 
-            
+        Route::get('/export/kml/{projectid}/{layername}',
+            [GisController::class, 'exportKml']);
+
+        Route::get('/export/shapefile/{projectid}/{layername}',
+            [GisController::class, 'exportShapefile']);
+
     });
 
 
