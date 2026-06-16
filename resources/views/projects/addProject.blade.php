@@ -34,7 +34,7 @@
 
             <div class="card-body">
 
-                <!-- SUCCESS -->
+                <!-- SUCCESS 
                 @if(session('success'))
 
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -48,9 +48,9 @@
 
                     </div>
 
-                @endif
+                @endif  -->
 
-                <!-- ERROR -->
+                <!-- ERROR 
                 @if(session('error'))
 
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -64,7 +64,7 @@
 
                     </div>
 
-                @endif
+                @endif  -->
 
                 <!-- VALIDATION ERRORS -->
                 @if($errors->any())

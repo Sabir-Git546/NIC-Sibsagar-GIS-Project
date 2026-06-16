@@ -4,8 +4,13 @@ body {
 }
 
 .header {
-    background: #3d94eb;
-    color: #fff;
+    background: #d5dee7;
+    color: #ffffff;
+    
+    
+}
+.header-title{
+    color:black
 }
 
 .content {
@@ -13,8 +18,8 @@ body {
 }
 
 .footer {
-    background: #3d94eb;
-    color: #fff;
+    background: #d5dee7;
+    color: #ffffff;
 }
 
 /* NAVBAR TAB STYLE */

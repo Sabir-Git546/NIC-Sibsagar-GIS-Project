@@ -14,6 +14,53 @@ class ReportController extends Controller
     | INDEX PAGE
     |--------------------------------------------------------------------------
     */
+    private function baseProjectQuery(Request $request)
+    {
+        $query = DB::table('projects as p')
+            ->leftJoin('departments as d', 'p.deptid', '=', 'd.deptid')
+            ->leftJoin('administrative_units as au', 'p.location_unitid', '=', 'au.unitid')
+            ->select(
+                'p.projectid',
+                'p.projectname',
+                'p.description',
+                'p.status',
+                'p.createdby',
+                'p.createdat',
+                'd.deptname as departmentname',
+                'au.unitname'
+            );
+
+        if (auth()->user()->roleid != 1) {
+            $query->where('p.deptid', auth()->user()->deptid);
+        }
+
+        if ($request->filled('deptid')) {
+            $query->where('p.deptid', $request->deptid);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('p.status', $request->status);
+        }
+
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('p.projectname', 'LIKE', "%{$request->search}%")
+                ->orWhere('p.description', 'LIKE', "%{$request->search}%");
+            });
+        }
+
+        if ($request->filled('from_date')) {
+            $query->whereDate('p.createdat', '>=', $request->from_date);
+        }
+
+        if ($request->filled('to_date')) {
+            $query->whereDate('p.createdat', '<=', $request->to_date);
+        }
+
+        return $query;
+    }
+
+
     public function index()
     {
         $departments = Department::orderBy('deptname')->get();
@@ -31,19 +78,7 @@ class ReportController extends Controller
     */
     public function projectReport(Request $request)
     {
-        $query = DB::table('projects as p')
-            ->leftJoin('departments as d', 'p.deptid', '=', 'd.deptid')
-            ->leftJoin('administrative_units as au', 'p.location_unitid', '=', 'au.unitid')
-            ->select(
-                'p.projectid',
-                'p.projectname',
-                'p.description',
-                'p.status',
-                'p.createdby',
-                'p.createdat',
-                'd.deptname as departmentname',
-                'au.unitname'
-            );
+        $query = $this->baseProjectQuery($request);
 
         /*
         |--------------------------------------------------------------------------
@@ -185,113 +220,63 @@ class ReportController extends Controller
     {
         /*
         |--------------------------------------------------------------------------
-        | BASE QUERY
+        | BASE QUERY (SAME LOGIC AS LIST VIEW)
         |--------------------------------------------------------------------------
         */
         $query = DB::table('projects as p')
-
-            ->leftJoin(
-                'departments as d',
-                'p.deptid',
-                '=',
-                'd.deptid'
-            )
-
-            ->leftJoin(
-                'administrative_units as au',
-                'p.location_unitid',
-                '=',
-                'au.unitid'
-            )
-
+            ->leftJoin('departments as d', 'p.deptid', '=', 'd.deptid')
+            ->leftJoin('administrative_units as au', 'p.location_unitid', '=', 'au.unitid')
             ->select(
-
                 'p.projectid',
                 'p.projectname',
                 'p.description',
                 'p.status',
                 'p.createdby',
                 'p.createdat',
-
                 'd.deptname as departmentname',
-
                 'au.unitname'
             );
 
         /*
         |--------------------------------------------------------------------------
-        | ROLE BASED SECURITY
+        | ROLE BASED ACCESS
         |--------------------------------------------------------------------------
         */
         if (auth()->user()->roleid != 1) {
-
-            $query->where(
-                'p.deptid',
-                auth()->user()->deptid
-            );
+            $query->where('p.deptid', auth()->user()->deptid);
         }
 
         /*
         |--------------------------------------------------------------------------
-        | FILTERS
+        | FILTERS (SAME AS REPORT PAGE)
         |--------------------------------------------------------------------------
         */
-
         if ($request->filled('deptid')) {
-
-            $query->where(
-                'p.deptid',
-                $request->deptid
-            );
+            $query->where('p.deptid', $request->deptid);
         }
 
         if ($request->filled('status')) {
-
-            $query->where(
-                'p.status',
-                $request->status
-            );
+            $query->where('p.status', $request->status);
         }
 
         if ($request->filled('search')) {
-
             $query->where(function ($q) use ($request) {
-
-                $q->where(
-                    'p.projectname',
-                    'LIKE',
-                    '%' . $request->search . '%'
-                )
-
-                ->orWhere(
-                    'p.description',
-                    'LIKE',
-                    '%' . $request->search . '%'
-                );
+                $q->where('p.projectname', 'LIKE', '%' . $request->search . '%')
+                ->orWhere('p.description', 'LIKE', '%' . $request->search . '%');
             });
         }
 
         if ($request->filled('from_date')) {
-
-            $query->whereDate(
-                'p.createdat',
-                '>=',
-                $request->from_date
-            );
+            $query->whereDate('p.createdat', '>=', $request->from_date);
         }
 
         if ($request->filled('to_date')) {
-
-            $query->whereDate(
-                'p.createdat',
-                '<=',
-                $request->to_date
-            );
+            $query->whereDate('p.createdat', '<=', $request->to_date);
         }
 
         /*
         |--------------------------------------------------------------------------
-        | FINAL REPORT DATA
+        | FINAL DATA
         |--------------------------------------------------------------------------
         */
         $reports = $query
@@ -300,24 +285,15 @@ class ReportController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | PDF GENERATION
+        | GENERATE PDF
         |--------------------------------------------------------------------------
         */
         $pdf = Pdf::loadView(
             'reports.pdf.project-report-pdf',
-            [
-                'reports' => $reports
-            ]
+            compact('reports')
         );
 
-        /*
-        |--------------------------------------------------------------------------
-        | DOWNLOAD PDF
-        |--------------------------------------------------------------------------
-        */
-        return $pdf->download(
-            'project-report.pdf'
-        );
+        return $pdf->download('project-report.pdf');
     }
 
     /*

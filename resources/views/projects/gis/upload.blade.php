@@ -81,9 +81,7 @@
 
             <div class="card-body">
 
-                <form action="{{ route('gis.upload.store', $project->projectid) }}"
-                      method="POST"
-                      enctype="multipart/form-data">
+                <form id="shpUploadForm">
 
                     @csrf
 
@@ -95,10 +93,10 @@
                         </label>
 
                         <input type="text"
-                               name="layername"
-                               class="form-control"
-                               placeholder="Enter GIS layer name"
-                               required>
+                                id="geojsonName"
+                                class="form-control"
+                                placeholder="Enter GIS layer name"
+                                required>
 
                     </div>
 
@@ -106,27 +104,27 @@
                     <div class="mb-3">
 
                         <label class="form-label">
-                            GeoJSON File
+                            Shapefile ZIP
                         </label>
 
                         <input type="file"
-                               name="gisfile"
-                               class="form-control"
-                               accept=".json,.geojson"
-                               required>
+                            id="zipFile"
+                            class="form-control"
+                            accept=".zip"
+                            required>
 
                         <small class="text-muted">
-                            Supported formats:
-                            .json, .geojson
+                            Upload ZIP containing .shp, .dbf and .shx files
                         </small>
 
                     </div>
 
                     {{-- SUBMIT --}}
-                    <button type="submit"
-                            class="btn btn-success">
+                    <button type="button"
+                            class="btn btn-success"
+                            onclick="GISTools.convertShp()">
 
-                        Upload GIS File
+                        Convert & Upload
 
                     </button>
 
@@ -139,6 +137,14 @@
     </div>
 
 </div>
+
+<script>
+    window.projectId = {{ $project->projectid }};
+</script>
+
+<script src="https://unpkg.com/shpjs@latest/dist/shp.min.js"></script>
+
+<script src="{{ asset('js/gis/tools.js') }}"></script>
 
 @endauth
 

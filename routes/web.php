@@ -36,6 +36,42 @@ Route::get('/login', [LoginController::class, 'showLoginForm'])
 Route::post('/login', [LoginController::class, 'login'])
     ->name('login.submit');
 
+/*
+|--------------------------------------------------------------------------
+|OTP VERIFICATION ROUTES
+|--------------------------------------------------------------------------
+ */
+
+ Route::post('/login/verify-otp', [LoginController::class, 'loginVerifyOtp'])
+     ->name('login.verifyOtp');
+     
+/*
+|--------------------------------------------------------------------------
+| PASSWORD RESET
+|--------------------------------------------------------------------------
+*/
+Route::get('/forgot-password', [LoginController::class, 'showForgotPasswordForm'])
+    ->name('password.forgot');
+
+Route::post('/forgot-password/send-otp', [LoginController::class, 'sendOtp'])
+    ->name('password.sendOtp');
+
+Route::post('/forgot-password/verify-otp', [LoginController::class, 'verifyOtp'])
+    ->name('password.verifyOtp');
+
+Route::post('/forgot-password/reset', [LoginController::class, 'resetPassword'])
+    ->name('password.reset');
+
+Route::get(
+    '/login/cancel',
+    [LoginController::class, 'cancelLogin']
+)->name('login.cancel');
+
+Route::get(
+    '/forgot-password/cancel',
+    [LoginController::class, 'cancelForgotPassword']
+)->name('password.cancel');
+
 Route::post('/logout', function (\Illuminate\Http\Request $request) {
 
     Auth::logout();
@@ -191,11 +227,20 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/gis-app', [GisController::class, 'gisApp'])
             ->name('gis.gisApp');
 
+        Route::get('/projects', [GisController::class, 'getProjects']);
+
         Route::get('/layer/{layername}', [GisController::class, 'getLayer'])
             ->name('gis.layer');
 
         Route::post('/save-geojson', [GisController::class, 'saveGeojson'])
             ->name('save-geojson');
+
+        Route::get('/export/kml/{projectid}/{layername}',
+            [GisController::class, 'exportKml']);
+
+        Route::get('/export/shapefile/{projectid}/{layername}',
+            [GisController::class, 'exportShapefile']);
+
     });
 
 
@@ -248,6 +293,10 @@ Route::middleware(['auth'])->group(function () {
 
         Route::delete('/{projectid}/gis/delete/{layername}', [ProjectGisController::class, 'deleteLayer'])
             ->name('gis.delete.layer');
+
+        Route::post('/{projectid}/gis/layers', [ProjectGisController::class, 'storeLayer']) //route to save buffered files
+            ->name('gis.layer.store');
+
 
 
         /*
@@ -309,4 +358,46 @@ Route::middleware(['auth'])->group(function () {
 
     });
 
+});
+
+//Testing route
+Route::get('/captcha-test', function () {
+    return '
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Captcha Test</title>
+        <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    </head>
+    <body style="padding:50px;">
+
+        <h2>Captcha Test</h2>
+
+        <form>
+
+            <div class="g-recaptcha"
+                 data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI">
+            </div>
+
+        </form>
+
+    </body>
+    </html>
+    ';
+});
+
+Route::get('/test500', function () {
+    abort(500);
+});
+
+Route::get('/test403', function () {
+    abort(403);
+});
+
+Route::get('/test404', function () {
+    abort(404);
+});
+
+Route::get('/test419', function () {
+    abort(419);
 });

@@ -5,142 +5,381 @@ namespace App\Http\Controllers;
 use App\Models\UserModel;
 use App\Models\Department;
 use App\Models\Role;
+
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Database\QueryException;
+
 use App\Services\AuditService;
 
 class UserController extends Controller
 {
-    // =========================
-    // LIST USERS
-    // =========================
+    // user table in viewusers 
     public function index()
     {
-        $users = UserModel::with(['department', 'role'])
-            ->paginate(10)
+        try {
 
-            ->withQueryString();
+            $users = UserModel::with([
+                'department',
+                'role'
+            ])
+                ->paginate(10)
+                ->withQueryString();
 
-        return view('users.viewUser', compact('users'));
+            return view(
+                'users.viewUser',
+                compact('users')
+            );
+
+        } catch (\Exception $e) {
+
+            Log::error('User Index Error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'user' => auth()->id()
+            ]);
+
+            return back()->with(
+                'error',
+                'Unable to load users.'
+            );
+        }
     }
 
-    // =========================
-    // CREATE FORM
-    // =========================
+
+    // add user form
     public function create()
     {
-        $depts = Department::all();
-        $roles = Role::all();
+        try {
 
-        return view('users.addUser', compact('depts', 'roles'));
+            $depts = Department::all();
+            $roles = Role::all();
+
+            return view(
+                'users.addUser',
+                compact('depts', 'roles')
+            );
+
+        } catch (\Exception $e) {
+
+            Log::error('User Create Form Error', [
+                'message' => $e->getMessage(),
+                'user' => auth()->id()
+            ]);
+
+            return back()->with(
+                'error',
+                'Unable to load create user page.'
+            );
+        }
     }
 
-    // =========================
-    // STORE USER
-    // =========================
+
+    // store user in db
     public function store(Request $request)
     {
+        try {
 
-        $request->validate([
-            'userid' => 'required|string|max:50|unique:users,userid',
-            'username' => 'required|string|max:100',
-            'userpass' => 'required|string|min:6',
-            're_password' => 'required|same:userpass',
-            'email' => 'required|email|unique:users,email',
-            'deptid' => 'required|exists:departments,deptid',
-            'roleid' => 'required|exists:roles,roleid',
-        ]);
+            $data = $request->validate([
+                'fval1' => 'required|string|max:50|unique:users,userid',
+                'fval2' => 'required|string|max:100',
+                'fval3' => 'required|string|min:8',
+                'fval4' => 'required|same:fval3',
+                'email' => 'required|email|unique:users,email',
+                'deptid' => 'required|exists:departments,deptid',
+                'roleid' => 'required|exists:roles,roleid',
+            ]);
 
-        $user = UserModel::create([
-            'userid' => $request->userid,
-            'username' => $request->username,
-            'password' => Hash::make($request->userpass),
-            'email' => $request->email,
-            'deptid' => $request->deptid,
-            'roleid' => $request->roleid,
-        ]);
+            DB::beginTransaction();
 
-        AuditService::log(
-            'CREATE',
-            'USER',
-            'User created: ' . $request->userid,
-            null,
-            $user->toArray()
-        );
+            // Duplicate userid prevention
+            $useridExists = UserModel::where(
+                'userid',
+                trim($data['fval1'])
+            )->exists();
 
-        return redirect()
-            ->route('user.index')
-            ->with('success', 'User Added Successfully!');
+            if ($useridExists) {
+
+                DB::rollBack();
+
+                return back()->with(
+                    'error',
+                    'User ID already exists.'
+                );
+            }
+
+            // Duplicate email prevention
+            $emailExists = UserModel::where(
+                'email',
+                trim($data['email'])
+            )->exists();
+
+            if ($emailExists) {
+
+                DB::rollBack();
+
+                return back()->with(
+                    'error',
+                    'Email already exists.'
+                );
+            }
+
+            $user = UserModel::create([
+                'userid' => trim($request->fval1),
+                'username' => trim($request->fval2),
+                'password' => Hash::make($request->fval3),
+                'email' => trim($request->email),
+                'deptid' => $request->deptid,
+                'roleid' => $request->roleid,
+            ]);
+
+            AuditService::log(
+                'CREATE',
+                'USER',
+                'User created: ' . $request->fval1,
+                null,
+                $user->toArray()
+            );
+
+            DB::commit();
+
+            return redirect()
+                ->route('user.index')
+                ->with(
+                    'success',
+                    'User added successfully!'
+                );
+
+        } catch (QueryException $e) {
+
+            DB::rollBack();
+
+            Log::error('User Store Database Error', [
+                'message' => $e->getMessage(),
+                'user' => auth()->id()
+            ]);
+
+            return back()->with(
+                'error',
+                'Database error occurred while creating user.'
+            );
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            Log::error('User Store Error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'user' => auth()->id()
+            ]);
+
+            return back()->with(
+                'error',
+                'Unable to create user.'
+            );
+        }
     }
 
-    // =========================
-    // EDIT USER
-    // =========================
+
+    // edit user form
     public function edit($id)
     {
-        $user = UserModel::findOrFail($id);
+        try {
 
-        $depts = Department::all();
-        $roles = Role::all();
+            $user = UserModel::findOrFail($id);
 
-        return view('users.editUser', compact('user', 'depts', 'roles'));
+            $depts = Department::all();
+            $roles = Role::all();
+
+            return view(
+                'users.editUser',
+                compact('user', 'depts', 'roles')
+            );
+
+        } catch (\Exception $e) {
+
+            Log::error('User Edit Error', [
+                'message' => $e->getMessage(),
+                'userid' => $id,
+                'user' => auth()->id()
+            ]);
+
+            return back()->with(
+                'error',
+                'Unable to load edit user page.'
+            );
+        }
     }
 
-    // =========================
-    // UPDATE USER
-    // =========================
+
+    // update user details in db
     public function update(Request $request, $id)
     {
-        $user = UserModel::findOrFail($id);
+        try {
 
-        $request->validate([
-            'username' => 'required|string|max:100',
-            'email' => 'required|email|unique:users,email,' . $user->id,
-            'deptid' => 'required|exists:departments,deptid',
-            'roleid' => 'required|exists:roles,roleid',
-        ]);
+            DB::beginTransaction();
 
-        $old = $user->toArray();
+            $user = UserModel::findOrFail($id);
 
-        $user->update([
-            'username' => $request->username,
-            'email' => $request->email,
-            'deptid' => $request->deptid,
-            'roleid' => $request->roleid,
-        ]);
+            $data = $request->validate([
+                'username' => 'required|string|max:100',
+                'email' => 'required|email|unique:users,email,' . $user->id,
+                'deptid' => 'required|exists:departments,deptid',
+                'roleid' => 'required|exists:roles,roleid',
+            ]);
 
-        AuditService::log(
-            'UPDATE',
-            'USER',
-            'User updated: ' . $user->userid,
-            $old,
-            $user->toArray()
-        );
+            // Prevent duplicate email
+            $emailExists = UserModel::where(
+                'email',
+                trim($data['email'])
+            )
+                ->where('id', '!=', $id)
+                ->exists();
 
-        return redirect()
-            ->route('user.index')
-            ->with('success', 'User Updated Successfully!');
+            if ($emailExists) {
+
+                DB::rollBack();
+
+                return back()->with(
+                    'error',
+                    'Email already exists.'
+                );
+            }
+
+            $old = $user->toArray();
+
+            $user->update([
+                'username' => trim($request->username),
+                'email' => trim($request->email),
+                'deptid' => $request->deptid,
+                'roleid' => $request->roleid,
+            ]);
+
+            AuditService::log(
+                'UPDATE',
+                'USER',
+                'User updated: ' . $user->userid,
+                $old,
+                $user->fresh()->toArray()
+            );
+
+            DB::commit();
+
+            return redirect()
+                ->route('user.index')
+                ->with(
+                    'success',
+                    'User updated successfully!'
+                );
+
+        } catch (QueryException $e) {
+
+            DB::rollBack();
+
+            Log::error('User Update Database Error', [
+                'message' => $e->getMessage(),
+                'userid' => $id,
+                'user' => auth()->id()
+            ]);
+
+            return back()->with(
+                'error',
+                'Database error occurred while updating user.'
+            );
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            Log::error('User Update Error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'userid' => $id,
+                'user' => auth()->id()
+            ]);
+
+            return back()->with(
+                'error',
+                'Unable to update user.'
+            );
+        }
     }
 
-    // =========================
-    // DELETE USER
-    // =========================
+
+    // delete user record from db
     public function destroy($id)
     {
-        $user = UserModel::findOrFail($id);
+        try {
 
-        AuditService::log(
-            'DELETE',
-            'USER',
-            'User deleted: ' . $user->userid,
-            $user->toArray(),
-            null
-        );
+            DB::beginTransaction();
 
-        $user->delete();
+            $user = UserModel::findOrFail($id);
 
-        return redirect()
-            ->route('user.index')
-            ->with('success', 'User deleted successfully!');
+            // Prevent self delete
+            if (auth()->id() == $user->id) {
+
+                DB::rollBack();
+
+                return back()->with(
+                    'error',
+                    'You cannot delete your own account.'
+                );
+            }
+
+            $oldData = $user->toArray();
+
+            AuditService::log(
+                'DELETE',
+                'USER',
+                'User deleted: ' . $user->userid,
+                $oldData,
+                null
+            );
+
+            $user->delete();
+
+            DB::commit();
+
+            return redirect()
+                ->route('user.index')
+                ->with(
+                    'success',
+                    'User deleted successfully!'
+                );
+
+        } catch (QueryException $e) {
+
+            DB::rollBack();
+
+            Log::error('User Delete Database Error', [
+                'message' => $e->getMessage(),
+                'userid' => $id,
+                'user' => auth()->id()
+            ]);
+
+            return back()->with(
+                'error',
+                'Database error occurred while deleting user.'
+            );
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            Log::error('User Delete Error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'userid' => $id,
+                'user' => auth()->id()
+            ]);
+
+            return back()->with(
+                'error',
+                'Unable to delete user.'
+            );
+        }
     }
 }

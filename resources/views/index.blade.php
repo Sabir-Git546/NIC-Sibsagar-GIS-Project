@@ -356,16 +356,13 @@ body {
     <div class="hero-content">
 
         <h1 class="hero-title">
-            District GIS Monitoring &
-            Spatial Intelligence Platform
+            Spatial Information System
         </h1>
 
         <p class="hero-subtitle">
 
-            Integrated geospatial platform for
-            monitoring, visualization and spatial
-            analysis of district development projects
-            using Geographic Information Systems.
+            Sibsagar District GIS Portal for Sibsagar District Administration<br>
+            Developed by NIC Sibsagar
 
         </p>
 
@@ -392,179 +389,5 @@ body {
 </section>
 
 
-{{-- =========================
-     FEATURES
-========================= --}}
-<!--<section class="feature-section"
-         id="features">
-
-    <div class="container">
-
-        <h2 class="section-title">
-            GIS Platform Capabilities
-        </h2>
-
-        <div class="row g-4">
-
-            <div class="col-md-6 col-lg-4">
-
-                <div class="feature-card">
-
-                    <div class="feature-icon">
-                        <i class="fas fa-map-marked-alt"></i>
-                    </div>
-
-                    <h4>Interactive GIS Mapping</h4>
-
-                    <p>
-                        Visualize district infrastructure,
-                        administrative boundaries and project
-                        layers interactively.
-                    </p>
-
-                </div>
-
-            </div>
-
-            <div class="col-md-6 col-lg-4">
-
-                <div class="feature-card">
-
-                    <div class="feature-icon">
-                        <i class="fas fa-draw-polygon"></i>
-                    </div>
-
-                    <h4>Spatial Analysis Tools</h4>
-
-                    <p>
-                        Perform buffer analysis,
-                        overlap analysis, distance
-                        measurement and feature inspection.
-                    </p>
-
-                </div>
-
-            </div>
-
-            <div class="col-md-6 col-lg-4">
-
-                <div class="feature-card">
-
-                    <div class="feature-icon">
-                        <i class="fas fa-layer-group"></i>
-                    </div>
-
-                    <h4>Multi-Layer Management</h4>
-
-                    <p>
-                        Manage GeoJSON layers,
-                        CSV visualization and
-                        spatial datasets efficiently.
-                    </p>
-
-                </div>
-
-            </div>
-
-            <div class="col-md-6 col-lg-4">
-
-                <div class="feature-card">
-
-                    <div class="feature-icon">
-                        <i class="fas fa-file-alt"></i>
-                    </div>
-
-                    <h4>GIS Reporting</h4>
-
-                    <p>
-                        Generate project reports,
-                        export GIS summaries and
-                        maintain audit-ready documentation.
-                    </p>
-
-                </div>
-
-            </div>
-
-            <div class="col-md-6 col-lg-4">
-
-                <div class="feature-card">
-
-                    <div class="feature-icon">
-                        <i class="fas fa-user-shield"></i>
-                    </div>
-
-                    <h4>Approval Workflow</h4>
-
-                    <p>
-                        Controlled GIS approval
-                        system for uploads,
-                        edits and deletions.
-                    </p>
-
-                </div>
-
-            </div>
-
-            <div class="col-md-6 col-lg-4">
-
-                <div class="feature-card">
-
-                    <div class="feature-icon">
-                        <i class="fas fa-database"></i>
-                    </div>
-
-                    <h4>Spatial Data Management</h4>
-
-                    <p>
-                        Securely manage and
-                        analyze geospatial data
-                        with structured workflows.
-                    </p>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</section>-->
-
-
-{{-- =========================
-     SYSTEM PREVIEW
-========================= --}}
-<!--<section class="preview-section">
-
-    <div class="container">
-
-        <h2 class="section-title">
-            GIS Dashboard Preview
-        </h2>
-
-        <div class="preview-box">
-
-            <img
-                src="{{ asset('images/gis-dashboard-preview.jpg') }}"
-                class="preview-image"
-                alt="GIS Dashboard Preview">
-
-        </div>
-
-    </div>
-
-</section>-->
-
-
-{{-- =========================
-     FOOTER
-========================= --}}
-<!--<footer class="footer-section">
-
-    Powered by Laravel • PostGIS • Leaflet • GeoJSON • Turf.js
-
-</footer>-->
 
 @endsection

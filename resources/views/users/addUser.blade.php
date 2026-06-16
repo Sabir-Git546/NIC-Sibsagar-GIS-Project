@@ -14,99 +14,247 @@
 
 <div class="dashboard-container">
 
+    {{-- SIDEBAR --}}
     @include('layouts.left-nav')
 
+    {{-- MAIN CONTENT --}}
     <div class="main-content">
 
+        <!-- PAGE HEADER -->
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="dashboard-title">Add User</h1>
+
+            <h1 class="dashboard-title">
+                Add User
+            </h1>
+
         </div>
+
 
         <div class="card-body">
 
-            {{-- SUCCESS MESSAGE --}}
-            @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show">
-                    {{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            @endif
+            <form id="addUserForm"
+                  action="{{ route('user.store') }}"
+                  method="POST" autocomplete="off">
 
-            {{-- ERROR MESSAGE --}}
-            @if(session('error'))
-                <div class="alert alert-danger alert-dismissible fade show">
-                    {{ session('error') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            @endif
-
-            <form id="addUserForm" action="{{ route('user.store') }}" method="POST">
                 @csrf
 
                 <div class="row mb-3">
 
-                    <div class="col-md-6">
-                        <label class="form-label">User Id</label>
-                        <input type="text" name="userid" class="form-control"
-                               value="{{ old('userid') }}" required>
+                    <!-- USER ID -->
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+                            User Id
+                        </label>
+
+                        <input type="text"
+                               name="fval1"
+                               value="{{ old('fval1') }}"
+                               class="form-control @error('fval1') is-invalid @enderror"
+                               required>
+
+                        @error('fval1')
+
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+
+                        @enderror
+
                     </div>
 
-                    <div class="col-md-6">
-                        <label class="form-label">User Name</label>
-                        <input type="text" name="username" class="form-control"
-                               value="{{ old('username') }}" required>
+
+                    <!-- USER NAME -->
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+                            User Name
+                        </label>
+
+                        <input type="text"
+                               name="fval2" autocomplete="off"
+                               value="{{ old('fval2') }}"
+                               class="form-control @error('fval2') is-invalid @enderror"
+                               required>
+
+                        @error('fval2')
+
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+
+                        @enderror
+
                     </div>
 
-                    <div class="col-md-6">
-                        <label class="form-label">Email</label>
-                        <input type="email" name="email" class="form-control"
-                               value="{{ old('email') }}" required>
+
+                    <!-- EMAIL -->
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+                            Email
+                        </label>
+
+                        <input type="email"
+                               name="email"
+                               value="{{ old('email') }}"
+                               class="form-control @error('email') is-invalid @enderror"
+                               required>
+
+                        @error('email')
+
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+
+                        @enderror
+
                     </div>
 
-                    <div class="col-md-6">
-                        <label class="form-label">Password</label>
-                        <input type="password" name="userpass" class="form-control" required>
+
+                    <!-- PASSWORD -->
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+                            Password
+                        </label>
+
+                        <input type="password"
+                               name="fval3" autocomplete="new-password"
+                               class="form-control @error('fval3') is-invalid @enderror"
+                               required>
+
+                        @error('fval3')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+
+                        @enderror
+
                     </div>
 
-                    <div class="col-md-6">
-                        <label class="form-label">Re-enter Password</label>
-                        <input type="password" name="re_password" class="form-control" required>
+
+                    <!-- RE ENTER PASSWORD -->
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+                            Re-enter Password
+                        </label>
+
+                        <input type="password"
+                               name="fval4"
+                               class="form-control @error('fval4') is-invalid @enderror"
+                               required>
+
+                        @error('fval4')
+
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+
+                        @enderror
+
                     </div>
 
-                    <div class="col-md-6">
-                        <label class="form-label">Department</label>
-                        <select name="deptid" class="form-select" required>
-                            <option value="">Select Department</option>
+
+                    <!-- DEPARTMENT -->
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+                            Department
+                        </label>
+
+                        <select name="deptid"
+                                class="form-select @error('deptid') is-invalid @enderror"
+                                required>
+
+                            <option value="">
+                                Select Department
+                            </option>
+
                             @foreach(($depts ?? []) as $dept)
-                                <option value="{{ $dept->deptid }}">
+
+                                <option value="{{ $dept->deptid }}"
+                                    {{ old('deptid') == $dept->deptid ? 'selected' : '' }}>
+
                                     {{ $dept->deptname }}
+
                                 </option>
+
                             @endforeach
+
                         </select>
+
+                        @error('deptid')
+
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+
+                        @enderror
+
                     </div>
 
-                    <div class="col-md-6">
-                        <label class="form-label">Role</label>
-                        <select name="roleid" class="form-select" required>
-                            <option value="">Select Role</option>
+
+                    <!-- ROLE -->
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+                            Role
+                        </label>
+
+                        <select name="roleid"
+                                class="form-select @error('roleid') is-invalid @enderror"
+                                required>
+
+                            <option value="">
+                                Select Role
+                            </option>
+
                             @foreach(($roles ?? []) as $role)
-                                <option value="{{ $role->roleid }}">
+
+                                <option value="{{ $role->roleid }}"
+                                    {{ old('roleid') == $role->roleid ? 'selected' : '' }}>
+
                                     {{ $role->rolename }}
+
                                 </option>
+
                             @endforeach
+
                         </select>
+
+                        @error('roleid')
+
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+
+                        @enderror
+
                     </div>
 
                 </div>
 
+
+                <!-- BUTTONS -->
                 <div class="text-end">
-                    <button type="reset" class="btn btn-secondary px-4">
+
+                    <button type="reset"
+                            class="btn btn-secondary px-4">
+
                         Reset
+
                     </button>
 
-                    <button type="submit" class="btn btn-primary px-4">
+                    <button type="submit"
+                            class="btn btn-primary px-4"
+                            onclick="this.disabled=true; this.form.submit();">
+
                         Save User
+
                     </button>
+
                 </div>
 
             </form>
@@ -121,6 +269,9 @@
 
 @endsection
 
+
 @section('scripts')
-    <script src="{{ asset('js/addUserValidation.js') }}"></script>
+
+<script src="{{ asset('js/addUserValidation.js') }}"></script>
+
 @endsection

@@ -198,7 +198,7 @@
 
                                 <th>Action</th>
 
-                                <th>Record</th>
+                                <!--<th>Record</th>-->
 
                                 <th>IP</th>
 
@@ -272,7 +272,17 @@
 
                                             'REJECTED' => 'secondary',
 
-                                            default => 'light'
+                                            'LOGIN_SUCCESS' => 'info',
+
+                                            'LOGIN_FAILED' => 'danger',
+
+                                            'LOGOUT' => 'secondary',
+
+                                            'PASSWORD_RESET_OTP_SENT' => 'warning',
+
+                                            'PASSWORD_RESET_OTP_VERIFIED' => 'success',
+
+                                            default => 'dark'
                                         };
 
                                     @endphp
@@ -286,11 +296,11 @@
                                 </td>
 
                                 <!-- RECORD -->
-                                <td>
+                               <!-- <td>
 
                                     {{ $log->recordid ?? '-' }}
 
-                                </td>
+                                </td>   -->
 
                                 <!-- IP -->
                                 <td class="text-muted small">

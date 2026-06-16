@@ -1,36 +1,49 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>RBAC Login | Spatial Information System</title>
+@extends('layouts.master')
 
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+@php
+$hideNavbar = true;
+@endphp
 
-    <!-- Bootstrap -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-          rel="stylesheet">
+@section('title', 'RBAC Login | Spatial Information System')
 
-    <!-- Page CSS -->
-    <link rel="stylesheet"
-          href="{{ asset('css/login.css') }}">
-</head>
+@section('styles') <link rel="stylesheet" href="{{ asset('css/login.css') }}">
+@endsection
 
-<body>
+@section('content')
+
+<div class="page-background">
+
 
 <div class="portal-title">
 
-    <h2>Government of Assam</h2>
+    <h2>
+        Spatial Information System
+    </h2>
 
-    <h5>Sibsagar District Administration Portal</h5>
+    <h5>
+        Sibsagar District Administration
+    </h5>
 
 </div>
+
+
+<div class="announcement-bar">
+
+    <div class="announcement-text">
+
+        Welcome to the Spatial Information System Portal •
+        
+        Designed & Developed by NIC Sibsagar •
+
+    </div>
+
+</div>
+
 
 <div class="login-wrapper">
 
     <div class="card login-card">
 
-        <!-- HEADER -->
         <div class="card-header text-center login-header py-3">
 
             <h4 class="mb-0">
@@ -39,156 +52,171 @@
 
         </div>
 
-        <!-- BODY -->
         <div class="card-body p-4">
 
-            {{-- SUCCESS MESSAGE --}}
-            @if(session('success'))
+            {{-- LOGIN FORM --}}
+            @if(session('login_step') !== 'otp')
 
-                <div class="alert alert-success alert-dismissible fade show"
-                     role="alert">
+                <form method="POST"
+                      action="{{ route('login.submit') }}"
+                      id="loginForm">
 
-                    {{ session('success') }}
+                    @csrf
 
-                    <button type="button"
-                            class="btn-close"
-                            data-bs-dismiss="alert">
-                    </button>
+                    <div class="mb-3">
 
-                </div>
+                        <label class="form-label">
+                            User ID
+                        </label>
 
-            @endif
+                        <input type="text"
+                               name="userid"
+                               class="form-control"
+                               value="{{ old('userid') }}"
+                               placeholder="Enter your User ID"
+                               autocomplete="username"
+                               required>
 
-
-            {{-- ERROR MESSAGE --}}
-            @if(session('error'))
-
-                <div class="alert alert-danger alert-dismissible fade show"
-                     role="alert">
-
-                    {{ session('error') }}
-
-                    <button type="button"
-                            class="btn-close"
-                            data-bs-dismiss="alert">
-                    </button>
-
-                </div>
-
-            @endif
-
-
-            {{-- VALIDATION ERRORS --}}
-            @if($errors->any())
-
-                <div class="alert alert-warning alert-dismissible fade show"
-                     role="alert">
-
-                    <strong>
-                        Please fix the following:
-                    </strong>
-
-                    <ul class="mb-0 mt-2">
-
-                        @foreach($errors->all() as $error)
-
-                            <li>{{ $error }}</li>
-
-                        @endforeach
-
-                    </ul>
-
-                    <button type="button"
-                            class="btn-close"
-                            data-bs-dismiss="alert">
-                    </button>
-
-                </div>
-
-            @endif
-
-
-            <!-- LOGIN FORM -->
-            <form method="POST"
-                  action="{{ route('login.submit') }}">
-
-                @csrf
-
-
-                <!-- USER ID -->
-                <div class="mb-3">
-
-                    <label class="form-label">
-                        User ID
-                    </label>
-
-                    <input type="text"
-                           name="userid"
-                           class="form-control @error('userid') is-invalid @enderror"
-                           value="{{ old('userid') }}"
-                           placeholder="Enter your userid"
-                           autocomplete="username"
-                           required>
-
-                </div>
-
-
-                <!-- PASSWORD -->
-                <div class="mb-3">
-
-                    <label class="form-label">
-                        Password
-                    </label>
-
-                    <input type="password"
-                           name="password"
-                           class="form-control @error('password') is-invalid @enderror"
-                           placeholder="Enter your password"
-                           autocomplete="current-password"
-                           required>
-
-                </div>
-
-
-                <!-- CAPTCHA -->
-                <div class="mb-4 text-center">
-
-                    <div class="g-recaptcha d-inline-block"
-                         data-sitekey="{{ env('RECAPTCHA_SITE_KEY') }}">
                     </div>
 
-                </div>
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Password
+                        </label>
+
+                        <div class="password-wrapper">
+
+                            <input type="password"
+                                   name="password"
+                                   id="password"
+                                   class="form-control"
+                                   placeholder="Enter your password"
+                                   autocomplete="current-password"
+                                   required>
+
+                            <span class="toggle-password"
+                                  id="togglePassword">
+
+                                <i class="bi bi-eye"></i>
+
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                    <div class="mb-4 text-center">
+
+                        <div class="g-recaptcha d-inline-block"
+                             data-sitekey="{{ config('services.recaptcha.site_key') }}">
+                        </div>
+
+                    </div>
+
+                    <div class="d-grid">
+
+                        <button type="submit"
+                                class="btn btn-custom"
+                                id="generateOtpBtn">
+
+                            Generate OTP
+
+                        </button>
+
+                    </div>
+
+                </form>
+
+            @endif
 
 
-                <!-- LOGIN BUTTON -->
-                <div class="d-grid">
+            {{-- OTP FORM --}}
+            @if(session('login_step') === 'otp')
 
-                    <button type="submit"
-                            class="btn btn-custom">
+                <h5 class="mb-3">
+                    Verify OTP
+                </h5>
 
-                        Login
+                <form method="POST"
+                      action="{{ route('login.verifyOtp') }}">
 
-                    </button>
+                    @csrf
 
-                </div>
+                    <div class="mb-3">
 
-            </form>
+                        <label class="form-label">
+                            OTP
+                        </label>
+
+                        <input type="text"
+                               name="otp"
+                               class="form-control"
+                               maxlength="6"
+                               required>
+
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-6">
+
+                            <a href="{{ route('login.cancel') }}"
+                               class="btn btn-secondary w-100">
+
+                                Cancel
+
+                            </a>
+
+                        </div>
+
+                        <div class="col-6">
+
+                            <button type="submit"
+                                    class="btn btn-custom w-100"
+                                    id="verifyOtpBtn">
+
+                                Verify OTP
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </form>
+
+            @endif
+
+            <div class="text-end mt-4">
+
+                <a href="{{ route('password.forgot') }}"
+                   class="text-decoration-none">
+
+                    Forgot Password?
+
+                </a>
+
+            </div>
 
         </div>
 
     </div>
 
 </div>
+```
 
+</div>
 
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+@endsection
 
-<!-- Google reCAPTCHA -->
+@section('scripts')
+
 <script src="https://www.google.com/recaptcha/api.js"
         async
         defer>
 </script>
 
-</body>
-</html>
+<script src="{{ asset('js/login.js') }}"></script>
+
+@endsection

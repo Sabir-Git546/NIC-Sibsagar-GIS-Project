@@ -106,6 +106,22 @@
     color: #ffffff;
 }
 
+
+.status-pending{
+    color: orange;
+    font-weight: bold;
+}
+
+.status-approved{
+    color: green;
+    font-weight: bold;
+}
+
+.status-rejected{
+    color: red;
+    font-weight: bold;
+}
+
 .chart-container {
     position: relative;
     width: 100%;

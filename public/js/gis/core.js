@@ -10,7 +10,15 @@ window.GIS = {
     // =========================
     layers: {},
 
+    csvGeoJson: null,
+
     csvLayers: [],
+
+    kmlLayers: [],
+
+    kmlGeoJson: null,
+
+    kmlPreviousView: null,
 
     // =========================
     // FEATURE STATE
@@ -131,9 +139,10 @@ GIS.clearInteractions = function () {
 
     GIS.map.off("dblclick");
 
+    GIS.map.off("contextmenu");
+
     GIS.map.getContainer().style.cursor = "";
 
-    // restore default click
     GIS.map.on("click", () => {
 
         GIS.selectedFeature = null;

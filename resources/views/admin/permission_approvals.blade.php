@@ -5,222 +5,248 @@
 @extends('layouts.master')
 
 @section('styles')
+
 <link rel="stylesheet" href="{{ asset('css/adminDashboard.css') }}">
 
-<style>
-
-    .status-pending{
-        color: orange;
-        font-weight: bold;
-    }
-
-    .status-approved{
-        color: green;
-        font-weight: bold;
-    }
-
-    .status-rejected{
-        color: red;
-        font-weight: bold;
-    }
-
-</style>
 @endsection
+
 
 @section('content')
 
 <div class="dashboard-container">
 
-    <!-- SIDEBAR -->
+    {{-- SIDEBAR --}}
     @include('layouts.left-nav')
 
-    <!-- MAIN CONTENT -->
+
+    {{-- MAIN CONTENT --}}
     <div class="main-content">
 
-        <h1 class="dashboard-title mb-4">
-            Permission Approvals
-        </h1>
+        <!-- PAGE HEADER -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
 
-        <!-- SUCCESS MESSAGE -->
-        @if(session('success'))
-            <div class="alert alert-success">
-                {{ session('success') }}
-            </div>
-        @endif
+            <h1 class="dashboard-title">
+                Permission Approvals
+            </h1>
 
-        <!-- ERROR MESSAGE -->
-        @if(session('error'))
-            <div class="alert alert-danger">
-                {{ session('error') }}
-            </div>
-        @endif
+        </div>
 
-        <div class="card">
+
+        <!-- CARD -->
+        <div class="card shadow-sm">
 
             <div class="card-body">
 
-                <table class="table table-bordered table-hover">
+                <!-- RESPONSIVE TABLE -->
+                <div class="table-responsive">
 
-                    <thead class="table-dark">
-                        <tr>
-                            <th>ID</th>
-                            <th>User</th>
-                            <th>Module</th>
-                            <th>Action</th>
-                            <th>Record ID</th>
-                            <th>Layer</th>
-                            <th>Status</th>
-                            <th>Created At</th>
-                            <th>Approved By</th>
-                            <th>Approved At</th>
-                            <th width="180">Action</th>
-                        </tr>
-                    </thead>
+                    <table class="table table-bordered table-hover align-middle">
 
-                    <tbody>
+                        <thead class="table-dark">
 
-                        @forelse($requests as $req)
+                            <tr>
 
-                        <tr>
+                                <th>ID</th>
 
-                            <td>
-                                {{ $req->requestid }}
-                            </td>
+                                <th>User</th>
 
-                            <td>
-                                {{ $req->userid }}
-                            </td>
+                                <th>Module</th>
 
-                            <td>
-                                {{ $req->module }}
-                            </td>
+                                <th>Action</th>
 
-                            <td>
-                                {{ $req->action }}
-                            </td>
+                                <th>Record ID</th>
 
-                            <td>
-                                {{ $req->recordid }}
-                            </td>
+                                <th>Layer</th>
 
-                            <td>
-                                {{ $req->layername ?? '-' }}
-                            </td>
+                                <th>Status</th>
 
-                            <td>
+                                <th>Created At</th>
 
-                                @if($req->status == 'pending')
+                                <th>Approved By</th>
 
-                                    <span class="status-pending">
-                                        Pending
-                                    </span>
+                                <th>Approved At</th>
 
-                                @elseif($req->status == 'approved')
+                                <th width="200">
+                                    Action
+                                </th>
 
-                                    <span class="status-approved">
-                                        Approved
-                                    </span>
+                            </tr>
 
-                                @else
+                        </thead>
 
-                                    <span class="status-rejected">
-                                        Rejected
-                                    </span>
 
-                                @endif
+                        <tbody>
 
-                            </td>
+                            @forelse($requests as $req)
 
-                            <td>
-                                {{ $req->created_at }}
-                            </td>
+                                <tr>
 
-                            <td>
-                                {{ $req->approved_by ?? '-' }}
-                            </td>
+                                    <!-- REQUEST ID -->
+                                    <td>
+                                        {{ $req->requestid }}
+                                    </td>
 
-                            <td>
-                                {{ $req->approved_at ?? '-' }}
-                            </td>
 
-                            <td>
+                                    <!-- USER -->
+                                    <td>
+                                        {{ $req->userid }}
+                                    </td>
 
-                                @if($req->status == 'pending')
 
-                                <!-- APPROVE -->
+                                    <!-- MODULE -->
+                                    <td>
+                                        {{ $req->module }}
+                                    </td>
 
-                                <form 
-                                    action="{{ route('approvals.approve', $req->requestid) }}" 
-                                    method="POST" 
-                                    style="display:inline;"
-                                    onsubmit="return confirm('Approve this request?')"
-                                >
 
-                                    @csrf
+                                    <!-- ACTION -->
+                                    <td>
+                                        {{ $req->action }}
+                                    </td>
 
-                                    <button class="btn btn-success btn-sm">
 
-                                        Approve
+                                    <!-- RECORD ID -->
+                                    <td>
+                                        {{ $req->recordid }}
+                                    </td>
 
-                                    </button>
 
-                                </form>
+                                    <!-- LAYER -->
+                                    <td>
+                                        {{ $req->layername ?? '-' }}
+                                    </td>
 
-                                <!-- REJECT -->
 
-                                <form 
-                                    action="{{ route('approvals.reject', $req->requestid) }}" 
-                                    method="POST" 
-                                    style="display:inline;"
-                                    onsubmit="return confirm('Reject this request?')"
-                                >
+                                    <!-- STATUS -->
+                                    <td>
 
-                                    @csrf
+                                        @if($req->status == 'pending')
 
-                                    <button class="btn btn-danger btn-sm">
+                                            <span class="status-pending">
+                                                Pending
+                                            </span>
 
-                                        Reject
+                                        @elseif($req->status == 'approved')
 
-                                    </button>
+                                            <span class="status-approved">
+                                                Approved
+                                            </span>
 
-                                </form>
+                                        @else
 
-                                @else
+                                            <span class="status-rejected">
+                                                Rejected
+                                            </span>
 
-                                    <span class="text-muted">
+                                        @endif
 
-                                        Completed
+                                    </td>
 
-                                    </span>
 
-                                @endif
+                                    <!-- CREATED -->
+                                    <td>
+                                        {{ $req->created_at }}
+                                    </td>
 
-                            </td>
 
-                        </tr>
+                                    <!-- APPROVED BY -->
+                                    <td>
+                                        {{ $req->approved_by ?? '-' }}
+                                    </td>
 
-                        @empty
 
-                        <tr>
+                                    <!-- APPROVED AT -->
+                                    <td>
+                                        {{ $req->approved_at ?? '-' }}
+                                    </td>
 
-                            <td colspan="11" class="text-center">
 
-                                No approval requests found.
+                                    <!-- ACTION BUTTONS -->
+                                    <td>
 
-                            </td>
+                                        @if($req->status == 'pending')
 
-                        </tr>
+                                            <!-- APPROVE -->
+                                            <form action="{{ route('approvals.approve', $req->requestid) }}"
+                                                  method="POST"
+                                                  class="d-inline">
 
-                        @endforelse
+                                                @csrf
 
-                    </tbody>
+                                                <button type="submit"
+                                                        class="btn btn-success btn-sm"
+                                                        onclick="return confirm('Approve this request?')">
 
-                </table>
+                                                    Approve
+
+                                                </button>
+
+                                            </form>
+
+
+                                            <!-- REJECT -->
+                                            <form action="{{ route('approvals.reject', $req->requestid) }}"
+                                                  method="POST"
+                                                  class="d-inline">
+
+                                                @csrf
+
+                                                <button type="submit"
+                                                        class="btn btn-danger btn-sm"
+                                                        onclick="return confirm('Reject this request?')">
+
+                                                    Reject
+
+                                                </button>
+
+                                            </form>
+
+                                        @else
+
+                                            <span class="text-muted">
+
+                                                Completed
+
+                                            </span>
+
+                                        @endif
+
+                                    </td>
+
+                                </tr>
+
+                            @empty
+
+                                <tr>
+
+                                    <td colspan="11"
+                                        class="text-center text-muted py-4">
+
+                                        No approval requests found.
+
+                                    </td>
+
+                                </tr>
+
+                            @endforelse
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
 
                 <!-- PAGINATION -->
-                <div class="d-flex justify-content-center mt-4">
-                    {{ $requests->links() }}
-                </div>
+                @if(method_exists($requests, 'links') && $requests->hasPages())
+
+                    <div class="d-flex justify-content-center mt-4">
+
+                        {{ $requests->links() }}
+
+                    </div>
+
+                @endif
 
             </div>
 
