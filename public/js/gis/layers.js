@@ -4,6 +4,7 @@ window.GISLayer = {
     // LOAD LAYER (GET GEOJSON)
     // Route: /gis/layer/{layername}
     // =============================
+    searchText: "",
     load(name) {
 
         if (GIS.layers[name]) return;
@@ -102,37 +103,52 @@ window.GISLayer = {
     },
 
 
-    // =============================
-    // SEARCH LAYERS
-    // =============================
-    search(q) {
+// =============================
+// SEARCH LAYERS
+// =============================
+search(q) {
 
-        document.querySelectorAll(".layer-item")
-            .forEach(el => {
+    const normalized = (q || "")
+        .toLowerCase()
+        .trim();
 
-                el.style.display =
-                    el.innerText.toLowerCase()
-                        .includes(q.toLowerCase())
-                        ? ""
-                        : "none";
-            });
-    },
+    if (GISLayer.searchText === normalized) return;
+
+    GISLayer.searchText = normalized;
+
+    GISLayer.applyFilters();
+},
 
 
-    // =============================
-    // FILTER BY DEPARTMENT
-    // =============================
-    filter() {
+// =============================
+// FILTER BY DEPARTMENT
+// =============================
+filter() {
 
-        let dept = document.getElementById("deptFilter").value;
+    GISLayer.applyFilters();
+},
 
-        document.querySelectorAll(".layer-item")
-            .forEach(el => {
 
-                let match = !dept || el.dataset.dept === dept;
-                el.style.display = match ? "" : "none";
-            });
-    },
+// =============================
+// APPLY SEARCH + DEPT FILTER
+// =============================
+applyFilters() {
+
+    const dept = (document.getElementById("deptFilter")?.value || "").trim();
+    const search = (GISLayer.searchText || "").toLowerCase().trim();
+
+    document.querySelectorAll(".layer-item").forEach(el => {
+
+        const itemDept = (el.dataset.dept || "").trim();
+        const itemName = (el.dataset.name || "").toLowerCase().trim();
+
+        const deptMatch = !dept || itemDept === dept;
+        const searchMatch = !search || itemName.includes(search);
+
+        el.classList.toggle("hidden", !(deptMatch && searchMatch));
+    });
+
+},
 
 
     // =============================

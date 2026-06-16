@@ -61,8 +61,8 @@
                                     <option value="master">Master Project Report</option>
                                     <option value="status">Status Summary</option>
                                     <option value="department">Department Wise</option>
-                                    <option value="gis">GIS Summary</option>
-                                    <option value="geometry">Geometry Summary</option>
+                                    <!--<option value="gis">GIS Summary</option>
+                                    <option value="geometry">Geometry Summary</option>-->
 
                                 </select>
                             </div>
@@ -133,11 +133,10 @@
                                     <i class="bi bi-funnel"></i> Generate
                                 </button>
 
-                                <button class="btn btn-danger"
-                                        type="submit"
-                                        formaction="{{ route('reports.projects.pdf') }}">
+                                <a class="btn btn-danger"
+                                href="{{ route('reports.projects.pdf', request()->query()) }}">
                                     <i class="bi bi-file-earmark-pdf"></i> PDF
-                                </button>
+                                </a>
 
                                 <button class="btn btn-success"
                                         type="submit"

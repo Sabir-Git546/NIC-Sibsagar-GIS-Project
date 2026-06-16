@@ -361,8 +361,8 @@ body {
 
         <p class="hero-subtitle">
 
-            Sibsagar District GIS Protal for Sibsagar District Administration<br>
-            Develped by NIC Sibsagar
+            Sibsagar District GIS Portal for Sibsagar District Administration<br>
+            Developed by NIC Sibsagar
 
         </p>
 

@@ -13,7 +13,7 @@
 
 @section('content')
 
-<div class="container mt-5">
+<div class="container mt-5 forget-pass">
 
     <div class="row justify-content-center">
 

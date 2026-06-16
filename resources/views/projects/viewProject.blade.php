@@ -163,7 +163,7 @@
                                 </th>
 
                                 <th width="140">
-                                    GIS & Documents
+                                    GIS Upload
                                 </th>
 
                             </tr>
@@ -377,17 +377,17 @@
                                     <a href="{{ route('gis.view', $prj->projectid) }}"
                                        class="btn btn-sm btn-warning">
 
-                                        GIS
+                                        GIS File
 
                                     </a>
 
                                     <!-- DOCS -->
-                                    <a href="#"
+                                   <!-- <a href="#"
                                        class="btn btn-sm btn-secondary">
 
                                         Docs
 
-                                    </a>
+                                    </a> -->
 
                                 </div>
 

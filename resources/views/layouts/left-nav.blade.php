@@ -32,9 +32,9 @@
             View Projects
         </a>
 
-        <a href="#" class="submenu-link">
+        <!--<a href="#" class="submenu-link">
             Update Status
-        </a>
+        </a>-->
     </div>
 
     <!-- GIS APP -->
@@ -58,9 +58,9 @@
             Generate Report
         </a>
 
-        <a href="#" class="submenu-link">
+        <!--<a href="#" class="submenu-link">
             Download Reports
-        </a>
+        </a>-->
     </div>
 
 

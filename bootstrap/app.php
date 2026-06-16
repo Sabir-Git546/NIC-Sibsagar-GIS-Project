@@ -14,7 +14,6 @@ return Application::configure(basePath: dirname(__DIR__))
 
     ->withMiddleware(function (Middleware $middleware): void {
 
-        // CUSTOM MIDDLEWARE ALIASES
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
@@ -27,11 +26,35 @@ return Application::configure(basePath: dirname(__DIR__))
 
         /*
         |--------------------------------------------------------------------------
+        | HANDLE SESSION EXPIRED (419)
+        |--------------------------------------------------------------------------
+        */
+        $exceptions->render(function ($e, $request) {
+
+            if (
+                $e instanceof \Illuminate\Session\TokenMismatchException ||
+                (
+                    method_exists($e, 'getStatusCode') &&
+                    $e->getStatusCode() === 419
+                )
+            ) {
+
+                return redirect()
+                    ->route('login')
+                    ->with(
+                        'error',
+                        'Your session has expired. Please login again.'
+                    );
+            }
+
+        });
+
+        /*
+        |--------------------------------------------------------------------------
         | GLOBAL EXCEPTION LOGGING
         |--------------------------------------------------------------------------
         */
-
-        $exceptions->report(function (Throwable $e) {
+        $exceptions->report(function (\Throwable $e) {
 
             \Log::error('Application Exception', [
 

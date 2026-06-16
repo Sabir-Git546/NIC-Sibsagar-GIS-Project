@@ -8,6 +8,7 @@
           content="width=device-width, initial-scale=1.0">
 
     <title>Sibsagar District GIS Portal</title>
+    <link rel="icon" type="image/png" href="{{ asset('favicon-v2.png') }}">
 
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
@@ -318,32 +319,32 @@
                 <ul class="list-unstyled">
 
                     <li>
-                        <a href="{{ url('/') }}"
+                        <a href="{{ url('#') }}"
                         class="footer-link">
                             Home
                         </a>
                     </li>
 
                     <li>
-                        <a href="{{ url('/about') }}"
+                        <a href="{{ url('#') }}"
                         class="footer-link">
                             About Us
                         </a>
                     </li>
 
                     <li>
-                        <a href="{{ url('/contact') }}"
+                        <a href="{{ url('#') }}"
                         class="footer-link">
                             Contact Us
                         </a>
                     </li>
 
-                    <li>
+                   <!-- <li>
                         <a href="{{ route('login') }}"
                         class="footer-link">
                             User Login
                         </a>
-                    </li>
+                    </li>   -->
 
                 </ul>
 
@@ -380,7 +381,7 @@
                 </h5>
 
                 <p class="small mb-1">
-                    Deputy Commissioner's Office
+                    Office of the District Commissioner
                 </p>
 
                 <p class="small mb-1">
@@ -388,12 +389,12 @@
                 </p>
 
                 <p class="small mb-1">
-                    Email: support@sivasagar.gov.in
+                    Email: sibsagar@nic.in
                 </p>
 
-                <p class="small mb-0">
+                <!--<p class="small mb-0">
                     Phone: +91-XXXXXXXXXX
-                </p>
+                </p>-->
 
             </div>
 

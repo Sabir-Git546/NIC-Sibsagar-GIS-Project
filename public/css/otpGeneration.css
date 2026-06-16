@@ -1,5 +1,11 @@
+.forget-pass{
+    position: relative;
+    min-height: 50vh;
+}
+
 .password-wrapper {
     position: relative;
+
 }
 
 .password-wrapper .form-control {

@@ -5,7 +5,7 @@ $hideNavbar = true;
 @extends('layouts.master')
 
 @section('styles')
-<link rel="stylesheet" href="{{ asset('css/adminDashboard.css') }}">
+
 <link rel="stylesheet" href="{{ asset('css/gisApp.css') }}">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 @endsection
@@ -22,6 +22,7 @@ $hideNavbar = true;
 
         <!-- ================= SIDEBAR ================= -->
         <div class="side-control-panel" id="controlPanel">
+        <br>
             <a href="{{ route('dashboard') }}"
             class="btn btn-success d-flex align-items-center gap-2 mb-4 shadow-sm rounded-pill px-3 py-2">
 
@@ -72,7 +73,9 @@ $hideNavbar = true;
 
                                     @foreach($layers as $layer)
 
-                                        <div class="layer-item d-flex justify-content-between align-items-center mb-2">
+                                        <div class="layer-item d-flex justify-content-between align-items-center mb-2"
+                                            data-dept="{{ $layer->deptid }}"
+                                            data-name="{{ strtolower($layer->layername) }}">
 
                                             <!-- CHECKBOX -->
                                             <div>
@@ -735,11 +738,12 @@ $hideNavbar = true;
 <!-- ================= GIS ENGINE ================= -->
 <script src="{{ asset('js/gis/utils.js') }}"></script>
 <script src="{{ asset('js/gis/core.js') }}"></script>
-<script src="{{ asset('js/gis/layers.js') }}"></script>
+
 <script src="{{ asset('js/gis/analysis.js') }}"></script>
 <script src="{{ asset('js/gis/tools.js') }}"></script>
 <script src="{{ asset('js/gis/ui.js') }}"></script>
 <script src="{{ asset('js/gis/drawing.js') }}"></script>
+<script src="{{ asset('js/gis/layers.js') }}"></script>
 
 
 
